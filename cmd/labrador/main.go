@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 
 	"github.com/DQGriffin/labrador/cmd"
@@ -48,13 +49,18 @@ var globalFlags = []cli.Flag{
 		Usage:   "Path to env file",
 		EnvVars: []string{"ENV_FILE"},
 	},
+	&cli.StringFlag{
+		Name:    "stages",
+		Usage:   "Comma-separated list of stage types to deploy (e.g. lambda,s3)",
+		EnvVars: []string{"DEPLOY_STAGES"},
+	},
 }
 
 func main() {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
+	err := godotenv.Load(".labrador.env")
+	if err != nil {
+		// Not an error. .labrador.env is optional
+	}
 	app := &cli.App{
 		Name:  "labrador",
 		Usage: "Deploy and manage AWS resources",
