@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/DQGriffin/labrador/internal/aws/lambda"
 	"github.com/DQGriffin/labrador/internal/helpers"
+	"github.com/DQGriffin/labrador/internal/services/aws"
 	"github.com/DQGriffin/labrador/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -45,7 +45,7 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 
 			utils.ReadCliArgs(c)
 
-			existingLambdas, err := lambda.ListLambdas()
+			existingLambdas, err := aws.ListLambdas()
 
 			if err != nil {
 				fmt.Println("Error: Could not list lambdas in AWS account. Check permissions ", err.Error())
@@ -61,12 +61,12 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 						if _, exists := existingLambdas[fn.Name]; exists {
 							if !c.Bool("only-create") {
 								fmt.Println("updating function", fn.Name)
-								// lambda.UpdateLambda(fn)
+								// aws.UpdateLambda(fn)
 							}
 						} else {
 							if !c.Bool("only-update") {
 								fmt.Println("creating function", fn.Name)
-								// lambda.CreateLambda(fn)
+								// aws.CreateLambda(fn)
 							}
 						}
 					}
