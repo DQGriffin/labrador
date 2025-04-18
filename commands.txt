@@ -1,0 +1,9 @@
+deploy
+
+labrador deploy --env-file=.env
+labrador deploy --project=[YOUR_PATH] --env-file=.env
+labrador deploy --project=[YOUR_PATH] --aws-access-key-id=[YOUR_KEY_ID] --aws-secret-access-key=[YOUR_KEY_SECRET] --aws-region=[YOUR_AWS_REGION]
+
+[with .labrador.env]
+labrador deploy
+labrador deploy --project=[YOUR_PATH]
