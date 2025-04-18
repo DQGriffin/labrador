@@ -52,26 +52,22 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 				os.Exit(1)
 			}
 
-			for i, stage := range config.Project.Stages {
-				fmt.Printf("Function count (Stage %d) %d\n", i, len(stage.Functions))
+			for _, stage := range config.Project.Stages {
+				fmt.Printf("Deploying Stage: %s\n", stage.Name)
+				fmt.Printf("Type: %s\n", stage.Type)
+
 				for _, fnConfig := range stage.Functions {
-					fmt.Println(fnConfig)
-				}
-			}
-
-			for _, functionGroup := range config.FunctionData {
-
-				for _, function := range functionGroup.Functions {
-
-					if _, exists := existingLambdas[function.Name]; exists {
-						if !c.Bool("only-create") {
-							fmt.Println("updating function", function.Name)
-							// lambda.UpdateLambda(function)
-						}
-					} else {
-						if !c.Bool("only-update") {
-							fmt.Println("creating function", function.Name)
-							// lambda.CreateLambda(function)
+					for _, fn := range fnConfig.Functions {
+						if _, exists := existingLambdas[fn.Name]; exists {
+							if !c.Bool("only-create") {
+								fmt.Println("updating function", fn.Name)
+								// lambda.UpdateLambda(fn)
+							}
+						} else {
+							if !c.Bool("only-update") {
+								fmt.Println("creating function", fn.Name)
+								// lambda.CreateLambda(fn)
+							}
 						}
 					}
 				}
