@@ -1,0 +1,15 @@
+# Executables
+main
+
+# Build artifacts
+/build
+/bin
+
+# Environment files
+*.env*
+
+# macOS file
+.DS_Store
+
+# Zip files
+*.zip

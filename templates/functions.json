@@ -1,0 +1,50 @@
+{
+    "defaults": {
+        "region": "us-east-1",
+        "handler": "index.handler",
+        "runtime": "nodejs18.x",
+        "code": "function.zip",
+        "roleArn": "arn:aws:iam::817889203093:role/service-role/healthcheck-get-services-1743897526106",
+        "memory": 128,
+        "timeout": 4,
+        "tags": {
+            "app": "labrador",
+            "env": "{{env}}"
+        },
+        "environment": {
+            "DB_CONNECTION_STRING": "$DB_CONNECTION_STRING"
+        }
+    },
+    "functions": [
+        {
+            "name": "{{env}}-{{project_name}}-auth",
+            "description": "A test function created with Labrador",
+            "runtime": "nodejs22.x",
+            "code": "sample.zip"
+        },
+        {
+            "name": "{{env}}-{{project_name}}-users",
+            "description": "A test function created with Labrador",
+            "runtime":"nodejs22.x",
+            "code": "sample.zip"
+        },
+        {
+            "name": "{{env}}-{{project_name}}-services",
+            "description": "A test function created with Labrador",
+            "runtime":"nodejs22.x",
+            "code": "sample.zip"
+        },
+        {
+            "name": "{{env}}-{{project_name}}-results",
+            "description": "A test function created with Labrador",
+            "runtime":"nodejs22.x",
+            "code": "sample.zip"
+        },
+        {
+            "name": "{{env}}-{{project_name}}-cleanup",
+            "description": "A test function created with Labrador",
+            "runtime":"nodejs22.x",
+            "code": "sample.zip"
+        }
+    ]
+}
