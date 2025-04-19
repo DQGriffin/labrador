@@ -1,0 +1,27 @@
+{
+    "defaults": {
+        "protocol": "http",
+        "description": "API Gateway created by labrador"
+    },
+    "gateways": [
+        {
+            "name": "Test Http Gateway",
+            "integrations": [
+                {
+                    "type": "proxy",
+                    "uri": "[auth-func]",
+                    "payloadVersion": "2.0",
+                    "integrationMethod": "POST",
+                    "ref": "auth-func-int"
+                }
+            ],
+            "routes": [
+                {
+                    "method": "GET",
+                    "route": "/users",
+                    "target": "[auth-func-int]"
+                }
+            ]
+        }
+    ]
+}

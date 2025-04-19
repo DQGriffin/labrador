@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -146,4 +147,22 @@ func UpdateLambdaConfiguration(lambdaConfig types.LambdaConfig) {
 	if err != nil {
 		log.Fatalf("Failed to update function config: %v", err)
 	}
+}
+
+func DeleteLambda(lambdaName string) {
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
+	if err != nil {
+		log.Fatalf("Unable to load AWS config: %v", err)
+	}
+
+	client := lambda.NewFromConfig(cfg)
+
+	_, deleteErr := client.DeleteFunction(context.TODO(), &lambda.DeleteFunctionInput{
+		FunctionName: aws.String(lambdaName),
+	})
+	if deleteErr != nil {
+		fmt.Printf("failed to delete Lambda %s: %w", lambdaName, err)
+	}
+
+	fmt.Printf("Deleted Lambda: %s\n", lambdaName)
 }

@@ -44,6 +44,10 @@ var globalFlags = []cli.Flag{
 		Name:  "only-update",
 		Usage: "Only update existing functions, skip creating new ones",
 	},
+	&cli.BoolFlag{
+		Name:  "dry-run",
+		Usage: "Preview operations before taking action",
+	},
 	&cli.StringFlag{
 		Name:    "env-file",
 		Usage:   "Path to env file",
@@ -69,6 +73,7 @@ func main() {
 			cmd.DeployCommand(globalFlags),
 			cmd.InitCommand(globalFlags),
 			cmd.PlanCommand(globalFlags),
+			cmd.DestroyCommand(globalFlags),
 		},
 	}
 
