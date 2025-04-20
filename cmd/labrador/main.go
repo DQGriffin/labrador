@@ -58,6 +58,10 @@ var globalFlags = []cli.Flag{
 		Usage:   "Comma-separated list of stage types to deploy (e.g. lambda,s3)",
 		EnvVars: []string{"DEPLOY_STAGES"},
 	},
+	&cli.BoolFlag{
+		Name:  "verbose",
+		Usage: "Output extra information",
+	},
 }
 
 func main() {
@@ -74,6 +78,7 @@ func main() {
 			cmd.InitCommand(globalFlags),
 			cmd.PlanCommand(globalFlags),
 			cmd.DestroyCommand(globalFlags),
+			cmd.InspectCommand(globalFlags),
 		},
 	}
 

@@ -7,3 +7,13 @@ labrador deploy --project=[YOUR_PATH] --aws-access-key-id=[YOUR_KEY_ID] --aws-se
 [with .labrador.env]
 labrador deploy
 labrador deploy --project=[YOUR_PATH]
+
+destroy
+ ./main destroy --project=./templates/project.json --env=staging --env-file=.env
+ ./main destroy --project=./templates/project.json --env=staging
+ ./main destroy --project=./templates/project.json --dry-run --env=staging
+
+ inspect
+ ./main inspect --project=./templates/project.json
+ ./main inspect --project=./templates/project.json --verbose
+ ./main inspect --project=./templates/project.json --verbose --env-file=.env
