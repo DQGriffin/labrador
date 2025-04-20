@@ -23,7 +23,7 @@ func printPlainText(config *types.LabradorConfig, verbose bool) {
 	plainPrintStages(&config.Project.Stages, verbose)
 
 	if !verbose {
-		fmt.Println("\nInspect more with --verbose")
+		fmt.Println("\nRun with --verbose to view detailed resource configuration.")
 	}
 }
 
