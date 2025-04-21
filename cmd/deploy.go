@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/DQGriffin/labrador/internal/commands"
 	"github.com/DQGriffin/labrador/internal/helpers"
 	"github.com/DQGriffin/labrador/internal/services/aws"
 	"github.com/DQGriffin/labrador/pkg/utils"
@@ -52,26 +53,10 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 				os.Exit(1)
 			}
 
-			for _, stage := range config.Project.Stages {
-				fmt.Printf("Deploying Stage: %s\n", stage.Name)
-				fmt.Printf("Type: %s\n", stage.Type)
+			onlyCreate := c.Bool("only-create")
+			onlyUpdate := c.Bool("only-update")
 
-				for _, fnConfig := range stage.Functions {
-					for _, fn := range fnConfig.Functions {
-						if _, exists := existingLambdas[fn.Name]; exists {
-							if !c.Bool("only-create") {
-								fmt.Println("updating function", fn.Name)
-								// aws.UpdateLambda(fn)
-							}
-						} else {
-							if !c.Bool("only-update") {
-								fmt.Println("creating function", fn.Name)
-								// aws.CreateLambda(fn)
-							}
-						}
-					}
-				}
-			}
+			commands.HandleDeployCommand(config, existingLambdas, onlyCreate, onlyUpdate)
 
 			fmt.Println("Done")
 			return nil
