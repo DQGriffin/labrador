@@ -14,7 +14,12 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 	return &cli.Command{
 		Name:  "inspect",
 		Usage: "Inspect project configurations",
-		Flags: flags,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "verbose",
+				Usage: "Output all information for resources",
+			},
+		},
 		Action: func(c *cli.Context) error {
 			fmt.Println("Inspecting...")
 

@@ -1,8 +1,8 @@
 {
     "defaults": {
         "name": "Temp Storage Bucket",
-        "region": "us-east-1",
-        "versioning": false,
+        "region": "us-east-2",
+        "versioning": true,
         "onDelete": "skip",
         "blockPublicAccess": true,
         "staticHosting": {
@@ -17,7 +17,7 @@
     },
     "buckets": [
         {
-            "name": "{{env}}-{{project_name}}-assets",
+            "name": "{{env}}-{{project_name}}-assets-6",
             "onDelete": "delete",
             "staticHosting": {
                 "enabled": false

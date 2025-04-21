@@ -53,10 +53,25 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 				os.Exit(1)
 			}
 
+			ctx, cfg, err := aws.GetConfig("us-east-1")
+
+			if err != nil {
+				return err
+			}
+
+			client := aws.GetClient(cfg)
+
+			existingBuckets, bucketErr := aws.ListBuckets(ctx, client)
+
+			if bucketErr != nil {
+				fmt.Println("Error: Could not list buckets in AWS account. Check permissions ", bucketErr.Error())
+				os.Exit(1)
+			}
+
 			onlyCreate := c.Bool("only-create")
 			onlyUpdate := c.Bool("only-update")
 
-			commands.HandleDeployCommand(config, existingLambdas, onlyCreate, onlyUpdate)
+			commands.HandleDeployCommand(config, existingLambdas, existingBuckets, onlyCreate, onlyUpdate)
 
 			fmt.Println("Done")
 			return nil
