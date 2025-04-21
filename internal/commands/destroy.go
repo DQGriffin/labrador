@@ -11,16 +11,10 @@ import (
 func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, env string) error {
 	for _, stage := range projectConfig.Project.Stages {
 		if isStageMarkedForDeletion(&stage, env) {
-			fmt.Println("Stage", stage.Name)
-			deletableLambdas, skippedLambdas := getDeletableLambdas(&stage.Functions, stage.Name)
-			deletableBuckets, skippedBuckets := getDeletableBuckets(&stage.Buckets, stage.Name)
-
-			if isDryRun {
-				handleDryRun(&deletableLambdas, &skippedLambdas)
-				handleDryRun(&deletableBuckets, &skippedBuckets)
-			} else {
-				destroyResources(&deletableLambdas)
-				destroyResources(&deletableBuckets)
+			if stage.Type == "lambda" {
+				handleLambdaStage(&stage, isDryRun)
+			} else if stage.Type == "s3" {
+				handleS3Stage(&stage, isDryRun)
 			}
 		} else {
 			fmt.Println("Skipping stage", stage.Name)
@@ -28,6 +22,28 @@ func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, env
 	}
 
 	return nil
+}
+
+func handleLambdaStage(stage *types.Stage, isDryRun bool) {
+	fmt.Println("Stage", stage.Name)
+	deletableLambdas, skippedLambdas := getDeletableLambdas(&stage.Functions, stage.Name)
+
+	if isDryRun {
+		handleDryRun(&deletableLambdas, &skippedLambdas)
+	} else {
+		destroyResources(&deletableLambdas)
+	}
+}
+
+func handleS3Stage(stage *types.Stage, isDryRun bool) {
+	fmt.Println("Stage", stage.Name)
+	deletableBuckets, skippedBuckets := getDeletableBuckets(&stage.Buckets, stage.Name)
+
+	if isDryRun {
+		handleDryRun(&deletableBuckets, &skippedBuckets)
+	} else {
+		destroyResources(&deletableBuckets)
+	}
 }
 
 func handleDryRun(forDeletion *[]internalTypes.UniversalResourceDefinition, skipped *[]internalTypes.UniversalResourceDefinition) {
