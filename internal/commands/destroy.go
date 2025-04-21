@@ -8,9 +8,9 @@ import (
 	"github.com/DQGriffin/labrador/pkg/types"
 )
 
-func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, env string) error {
+func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, stageTypesMap *map[string]bool, env string) error {
 	for _, stage := range projectConfig.Project.Stages {
-		if isStageMarkedForDeletion(&stage, env) {
+		if isStageMarkedForDeletion(&stage, stageTypesMap, env) {
 			if stage.Type == "lambda" {
 				handleLambdaStage(&stage, isDryRun)
 			} else if stage.Type == "s3" {
@@ -58,9 +58,13 @@ func handleDryRun(forDeletion *[]internalTypes.UniversalResourceDefinition, skip
 	fmt.Println()
 }
 
-func isStageMarkedForDeletion(stage *types.Stage, env string) bool {
-	// Not yet implemented.
-	return true
+func isStageMarkedForDeletion(stage *types.Stage, stageTypesMap *map[string]bool, env string) bool {
+	if len(*stageTypesMap) == 0 {
+		fmt.Println("Stage types map is empty. Returning true")
+		return true
+	}
+
+	return (*stageTypesMap)[stage.Type]
 }
 
 func getDeletableLambdas(config *[]types.LambdaData, stageName string) ([]internalTypes.UniversalResourceDefinition, []internalTypes.UniversalResourceDefinition) {
@@ -100,14 +104,14 @@ func getDeletableBuckets(config *[]types.S3Config, stageName string) ([]internal
 					Name:         *bucket.Name,
 					StageName:    stageName,
 					Arn:          "",
-					ResourceType: "lambda",
+					ResourceType: "s3",
 				})
 			} else {
 				skippedBuckets = append(skippedBuckets, internalTypes.UniversalResourceDefinition{
 					Name:         *bucket.Name,
 					StageName:    stageName,
 					Arn:          "",
-					ResourceType: "lambda",
+					ResourceType: "s3",
 				})
 			}
 		}

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/DQGriffin/labrador/internal/commands"
 	"github.com/DQGriffin/labrador/internal/helpers"
@@ -14,7 +15,18 @@ func DestroyCommand(flags []cli.Flag) *cli.Command {
 	return &cli.Command{
 		Name:  "destroy",
 		Usage: "Destroy resources",
-		Flags: flags,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "dry-run",
+				Usage:   "Preview actions labarador will take without making changes to infrastructure",
+				EnvVars: []string{"DRY_RUN"},
+			},
+			&cli.StringFlag{
+				Name:    "stage-types",
+				Usage:   "Restrict destroy operations for stage types in a comma-separated list",
+				EnvVars: []string{"STAGE_TYPES"},
+			},
+		},
 		Action: func(c *cli.Context) error {
 			fmt.Println("Destroy")
 
@@ -45,7 +57,18 @@ func DestroyCommand(flags []cli.Flag) *cli.Command {
 				env = c.String("env")
 			}
 
-			commandErr := commands.HandleDestroyCommand(config, isDryRun, env)
+			stageTypesMap := make(map[string]bool)
+			if c.String("stage-types") != "" {
+				stageTypes := strings.Split(c.String("stage-types"), ",")
+
+				for _, stageType := range stageTypes {
+					stageTypesMap[stageType] = true
+				}
+			}
+
+			fmt.Println(stageTypesMap)
+
+			commandErr := commands.HandleDestroyCommand(config, isDryRun, &stageTypesMap, env)
 			return commandErr
 		},
 	}
