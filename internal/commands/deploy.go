@@ -10,7 +10,7 @@ import (
 
 func HandleDeployCommand(config types.LabradorConfig, existingLambdas map[string]lambdaTypes.FunctionConfiguration, existingBuckets map[string]bool, onlyCreate bool, onlyUpdate bool) {
 	for _, stage := range config.Project.Stages {
-		// deployLambdaStage(&stage, existingLambdas, onlyCreate, onlyUpdate)
+		deployLambdaStage(&stage, existingLambdas, onlyCreate, onlyUpdate)
 		deployS3Stage(&stage, existingBuckets, onlyCreate, onlyUpdate)
 	}
 }

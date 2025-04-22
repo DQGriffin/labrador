@@ -9,7 +9,7 @@
             "integrations": [
                 {
                     "type": "proxy",
-                    "uri": "[auth-func]",
+                    "uri": "[[auth-func]]",
                     "payloadVersion": "2.0",
                     "integrationMethod": "POST",
                     "ref": "auth-func-int"
@@ -19,7 +19,7 @@
                 {
                     "method": "GET",
                     "route": "/users",
-                    "target": "[auth-func-int]"
+                    "target": "[[auth-func-int]]"
                 }
             ]
         }
