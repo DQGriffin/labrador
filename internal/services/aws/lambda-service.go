@@ -149,6 +149,17 @@ func UpdateLambdaConfiguration(lambdaConfig types.LambdaConfig) {
 	}
 }
 
+func GetLambda(ctx context.Context, cfg aws.Config, lambdaName string) (lambdaTypes.FunctionConfiguration, error) {
+	client := lambda.NewFromConfig(cfg)
+
+	output, err := client.GetFunction(ctx, &lambda.GetFunctionInput{
+		FunctionName: aws.String(lambdaName),
+	})
+	fn := *output.Configuration
+
+	return fn, err
+}
+
 func DeleteLambda(lambdaName string) {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
 	if err != nil {

@@ -15,7 +15,16 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 	return &cli.Command{
 		Name:  "deploy",
 		Usage: "Deploy Lambda functions defined in your config",
-		Flags: flags,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "only-create",
+				Usage: "Only create new resources, skip updating existing ones",
+			},
+			&cli.BoolFlag{
+				Name:  "only-update",
+				Usage: "Only update resources, skip creating new ones",
+			},
+		},
 		Before: func(c *cli.Context) error {
 			if c.Bool("only-create") && c.Bool("only-update") {
 				return fmt.Errorf("you can't use --only-create and --only-update at the same time")

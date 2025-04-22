@@ -10,8 +10,9 @@ import (
 
 func HandleDeployCommand(config types.LabradorConfig, existingLambdas map[string]lambdaTypes.FunctionConfiguration, existingBuckets map[string]bool, onlyCreate bool, onlyUpdate bool) {
 	for _, stage := range config.Project.Stages {
-		deployLambdaStage(&stage, existingLambdas, onlyCreate, onlyUpdate)
-		deployS3Stage(&stage, existingBuckets, onlyCreate, onlyUpdate)
+		// deployLambdaStage(&stage, existingLambdas, onlyCreate, onlyUpdate)
+		// deployS3Stage(&stage, existingBuckets, onlyCreate, onlyUpdate)
+		deployApiGatewayStage(&stage, onlyCreate, onlyUpdate)
 	}
 }
 
@@ -30,6 +31,22 @@ func deployLambdaStage(stage *types.Stage, existingLambdas map[string]lambdaType
 				if !onlyUpdate {
 					fmt.Println("creating function", fn.Name)
 					aws.CreateLambda(fn)
+				}
+			}
+		}
+	}
+}
+
+func deployApiGatewayStage(stage *types.Stage, onlyCreate bool, onlyUpdate bool) {
+	fmt.Printf("Deploying Stage: %s\n", stage.Name)
+	fmt.Printf("Type: %s\n", stage.Type)
+
+	for _, gatewayConfig := range stage.Gateways {
+		for _, gateway := range gatewayConfig.Gateways {
+			if !onlyUpdate {
+				err := aws.CreateApiGateway(&gateway)
+				if err != nil {
+					fmt.Println(err.Error())
 				}
 			}
 		}

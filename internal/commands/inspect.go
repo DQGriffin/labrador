@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/DQGriffin/labrador/internal/helpers"
+	"github.com/DQGriffin/labrador/pkg/refs"
 	"github.com/DQGriffin/labrador/pkg/types"
 )
 
@@ -49,6 +50,12 @@ func plainPrintStages(stages *[]types.Stage, verbose bool) {
 			}
 		}
 
+		for _, gatewayConfig := range stage.Gateways {
+			for _, gateway := range gatewayConfig.Gateways {
+				plainPrintApiGateway(&gateway, verbose)
+			}
+		}
+
 	}
 }
 
@@ -79,6 +86,34 @@ func plainPrintS3(s3 *types.S3Settings, verbose bool) {
 		fmt.Printf("    - On Delete            : %s\n", helpers.PtrOrDefault(s3.OnDelete, "delete"))
 		fmt.Println("    - Tags                 :")
 		PrintMapAligned("      - ", s3.Tags)
+		fmt.Println()
+	}
+}
+
+func plainPrintApiGateway(gateway *types.ApiGatewaySettings, verbose bool) {
+	fmt.Printf("  - %s \n", helpers.PtrOrDefault(gateway.Name, "[Name not set]"))
+	if verbose {
+		fmt.Printf("    - Protocol     : %s\n", helpers.PtrOrDefault(gateway.Protocol, "[protocol not set]"))
+		fmt.Printf("    - Description  : %s\n", helpers.PtrOrDefault(gateway.Description, "[description not set]"))
+		plainPrintApiGatewayIntegrations(&gateway.Integrations)
+		fmt.Println("    - Tags         :")
+		PrintMapAligned("      - ", gateway.Tags)
+		fmt.Println()
+	}
+}
+
+func plainPrintApiGatewayIntegrations(integrations *[]types.ApiGatewayIntegration) {
+	fmt.Println("    - Integrations")
+	for _, integration := range *integrations {
+		fmt.Printf("      - Type                : %s\n", integration.Type)
+		m := make(map[string]string)
+		arn, err := refs.ResolveTarget(integration.Target, m)
+		if err != nil {
+			fmt.Printf("      - Target              : %s\n", "[unresolved]")
+		}
+		fmt.Printf("      - Target              : %s\n", arn)
+		fmt.Printf("      - Payload version     : %s\n", integration.PayloadVersion)
+		fmt.Printf("      - Integration method  : %s\n", integration.IntegrationMethod)
 	}
 }
 

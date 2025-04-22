@@ -52,14 +52,17 @@ func validateErrorResolution(value string) error {
 	}
 }
 
+// TODO: Refactor this
 func validateStageType(value string) error {
 	switch value {
 	case "lambda":
 		return nil
 	case "s3":
 		return nil
+	case "api":
+		return nil
 	default:
-		return fmt.Errorf("type must be one of: lambda, s3")
+		return fmt.Errorf("type must be one of: lambda, s3, api")
 	}
 }
 

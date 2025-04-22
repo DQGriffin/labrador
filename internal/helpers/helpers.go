@@ -102,6 +102,16 @@ func LoadProject(filepath string) (types.LabradorConfig, error) {
 		// }
 	}
 
+	gatewayConfigs, gatewayErr := utils.ReadApiGatewayConfigs(&project.Stages)
+	if gatewayErr != nil {
+		fmt.Println(gatewayErr)
+		os.Exit(1)
+	}
+
+	for i := range gatewayConfigs {
+		interpolation.Interpolate(&gatewayConfigs[i], project.Variables)
+	}
+
 	config.Project = project
 	return config, nil
 }
