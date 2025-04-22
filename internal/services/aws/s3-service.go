@@ -6,6 +6,7 @@ import (
 
 	"github.com/DQGriffin/labrador/pkg/types"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
@@ -69,14 +70,19 @@ func UpdateBucket(ctx context.Context, client s3.Client, bucket types.S3Settings
 	return nil
 }
 
-func DeleteBucket(bucketName string) error {
-	ctx, cfg, err := GetConfig("us-east-1")
+func DeleteBucket(bucketName string, force bool) error {
+	ctx, cfg, err := GetConfig("us-east-2")
 
 	if err != nil {
 		return err
 	}
 
 	client := GetClient(cfg)
+
+	if force {
+		// Region is hard coded for now. Need to refactor
+		EmptyBucket(ctx, bucketName, "us-east-2")
+	}
 
 	_, deleteErr := client.DeleteBucket(ctx, &s3.DeleteBucketInput{
 		Bucket: aws.String(bucketName),
@@ -87,6 +93,54 @@ func DeleteBucket(bucketName string) error {
 	}
 
 	fmt.Printf("Deleted bucket: %s\n", bucketName)
+	return nil
+}
+
+func EmptyBucket(ctx context.Context, bucketName, region string) error {
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
+	if err != nil {
+		return fmt.Errorf("failed to load AWS config: %w", err)
+	}
+
+	client := s3.NewFromConfig(cfg)
+
+	paginator := s3.NewListObjectsV2Paginator(client, &s3.ListObjectsV2Input{
+		Bucket: aws.String(bucketName),
+	})
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to list objects: %w", err)
+		}
+
+		if len(page.Contents) == 0 {
+			break
+		}
+
+		// Prepare delete request for up to 1000 objects
+		var objectsToDelete []s3Types.ObjectIdentifier
+		for _, obj := range page.Contents {
+			objectsToDelete = append(objectsToDelete, s3Types.ObjectIdentifier{
+				Key: obj.Key,
+			})
+		}
+
+		_, err = client.DeleteObjects(ctx, &s3.DeleteObjectsInput{
+			Bucket: aws.String(bucketName),
+			Delete: &s3Types.Delete{
+				Objects: objectsToDelete,
+				Quiet:   aws.Bool(true),
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to delete objects: %w", err)
+		}
+
+		fmt.Printf("Deleted %d objects from %s\n", len(objectsToDelete), bucketName)
+	}
+
+	fmt.Printf("Bucket %s is now empty\n", bucketName)
 	return nil
 }
 

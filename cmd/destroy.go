@@ -21,6 +21,11 @@ func DestroyCommand(flags []cli.Flag) *cli.Command {
 				Usage:   "Preview actions labarador will take without making changes to infrastructure",
 				EnvVars: []string{"DRY_RUN"},
 			},
+			&cli.BoolFlag{
+				Name:    "force",
+				Usage:   "Take extra steps to force the deletion of resources",
+				EnvVars: []string{"DRY_RUN"},
+			},
 			&cli.StringFlag{
 				Name:    "stage-types",
 				Usage:   "Restrict destroy operations for stage types in a comma-separated list",
@@ -66,9 +71,9 @@ func DestroyCommand(flags []cli.Flag) *cli.Command {
 				}
 			}
 
-			fmt.Println(stageTypesMap)
+			force := c.Bool("force")
 
-			commandErr := commands.HandleDestroyCommand(config, isDryRun, &stageTypesMap, env)
+			commandErr := commands.HandleDestroyCommand(config, isDryRun, force, &stageTypesMap, env)
 			return commandErr
 		},
 	}

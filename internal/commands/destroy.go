@@ -8,13 +8,13 @@ import (
 	"github.com/DQGriffin/labrador/pkg/types"
 )
 
-func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, stageTypesMap *map[string]bool, env string) error {
+func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, force bool, stageTypesMap *map[string]bool, env string) error {
 	for _, stage := range projectConfig.Project.Stages {
 		if isStageMarkedForDeletion(&stage, stageTypesMap, env) {
 			if stage.Type == "lambda" {
-				handleLambdaStage(&stage, isDryRun)
+				handleLambdaStage(&stage, isDryRun, force)
 			} else if stage.Type == "s3" {
-				handleS3Stage(&stage, isDryRun)
+				handleS3Stage(&stage, isDryRun, force)
 			}
 		} else {
 			fmt.Println("Skipping stage", stage.Name)
@@ -24,25 +24,25 @@ func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, sta
 	return nil
 }
 
-func handleLambdaStage(stage *types.Stage, isDryRun bool) {
+func handleLambdaStage(stage *types.Stage, isDryRun bool, force bool) {
 	fmt.Println("Stage", stage.Name)
 	deletableLambdas, skippedLambdas := getDeletableLambdas(&stage.Functions, stage.Name)
 
 	if isDryRun {
 		handleDryRun(&deletableLambdas, &skippedLambdas)
 	} else {
-		destroyResources(&deletableLambdas)
+		destroyResources(&deletableLambdas, force)
 	}
 }
 
-func handleS3Stage(stage *types.Stage, isDryRun bool) {
+func handleS3Stage(stage *types.Stage, isDryRun bool, force bool) {
 	fmt.Println("Stage", stage.Name)
 	deletableBuckets, skippedBuckets := getDeletableBuckets(&stage.Buckets, stage.Name)
 
 	if isDryRun {
 		handleDryRun(&deletableBuckets, &skippedBuckets)
 	} else {
-		destroyResources(&deletableBuckets)
+		destroyResources(&deletableBuckets, force)
 	}
 }
 
@@ -120,12 +120,12 @@ func getDeletableBuckets(config *[]types.S3Config, stageName string) ([]internal
 	return deletableBuckets, skippedBuckets
 }
 
-func destroyResources(resources *[]internalTypes.UniversalResourceDefinition) {
+func destroyResources(resources *[]internalTypes.UniversalResourceDefinition, force bool) {
 	for _, resource := range *resources {
 		if resource.ResourceType == "lambda" {
 			aws.DeleteLambda(resource.Name)
 		} else if resource.ResourceType == "s3" {
-			aws.DeleteBucket(resource.Name)
+			aws.DeleteBucket(resource.Name, force)
 		}
 	}
 }
