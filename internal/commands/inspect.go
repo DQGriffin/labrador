@@ -96,6 +96,7 @@ func plainPrintApiGateway(gateway *types.ApiGatewaySettings, verbose bool) {
 		fmt.Printf("    - Protocol     : %s\n", helpers.PtrOrDefault(gateway.Protocol, "[protocol not set]"))
 		fmt.Printf("    - Description  : %s\n", helpers.PtrOrDefault(gateway.Description, "[description not set]"))
 		plainPrintApiGatewayIntegrations(&gateway.Integrations)
+		plainPrintApiGatewayRoutes(&gateway.Routes)
 		fmt.Println("    - Tags         :")
 		PrintMapAligned("      - ", gateway.Tags)
 		fmt.Println()
@@ -114,6 +115,15 @@ func plainPrintApiGatewayIntegrations(integrations *[]types.ApiGatewayIntegratio
 		fmt.Printf("      - Target              : %s\n", arn)
 		fmt.Printf("      - Payload version     : %s\n", integration.PayloadVersion)
 		fmt.Printf("      - Integration method  : %s\n", integration.IntegrationMethod)
+	}
+}
+
+func plainPrintApiGatewayRoutes(routes *[]types.ApiGatewayRoute) {
+	fmt.Println("    - Routes")
+	for _, route := range *routes {
+		fmt.Printf("      - Method  : %s\n", route.Method)
+		fmt.Printf("      - Route   : %s\n", route.Route)
+		fmt.Printf("      - Target  : %s\n", *route.Target.Ref)
 	}
 }
 
