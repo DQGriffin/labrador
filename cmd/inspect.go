@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/DQGriffin/labrador/internal/commands"
 	"github.com/DQGriffin/labrador/internal/helpers"
@@ -18,6 +19,10 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 			&cli.BoolFlag{
 				Name:  "verbose",
 				Usage: "Output all information for resources",
+			},
+			&cli.StringFlag{
+				Name:  "stage-types",
+				Usage: "Restrict output to specific stage types",
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -45,7 +50,16 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 
 			verbose := c.Bool("verbose")
 
-			commands.HandleInspectCommand(&config, "plain", verbose)
+			stageTypesMap := make(map[string]bool)
+			if c.String("stage-types") != "" {
+				stageTypes := strings.Split(c.String("stage-types"), ",")
+
+				for _, stageType := range stageTypes {
+					stageTypesMap[stageType] = true
+				}
+			}
+
+			commands.HandleInspectCommand(&config, "plain", &stageTypesMap, verbose)
 
 			return nil
 		},

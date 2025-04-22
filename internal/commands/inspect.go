@@ -9,19 +9,19 @@ import (
 	"github.com/DQGriffin/labrador/pkg/types"
 )
 
-func HandleInspectCommand(config *types.LabradorConfig, format string, verbose bool) {
+func HandleInspectCommand(config *types.LabradorConfig, format string, stageTypesMap *map[string]bool, verbose bool) {
 	switch format {
 	case "plain":
-		printPlainText(config, verbose)
+		printPlainText(config, stageTypesMap, verbose)
 	default:
-		printPlainText(config, verbose)
+		printPlainText(config, stageTypesMap, verbose)
 	}
 }
 
-func printPlainText(config *types.LabradorConfig, verbose bool) {
+func printPlainText(config *types.LabradorConfig, stageTypesMap *map[string]bool, verbose bool) {
 	fmt.Println("============================")
 	plainPrintProject(&config.Project, verbose)
-	plainPrintStages(&config.Project.Stages, verbose)
+	plainPrintStages(&config.Project.Stages, stageTypesMap, verbose)
 
 	if !verbose {
 		fmt.Println("\nRun with --verbose to view detailed resource configuration.")
@@ -33,30 +33,39 @@ func plainPrintProject(project *types.Project, verbose bool) {
 	fmt.Printf("Environment: %s\n", project.Environment)
 }
 
-func plainPrintStages(stages *[]types.Stage, verbose bool) {
+func plainPrintStages(stages *[]types.Stage, stageTypesMap *map[string]bool, verbose bool) {
 	fmt.Println("\nStages:")
 	for _, stage := range *stages {
-		fmt.Printf("- %s (%s)\n", stage.Name, stage.Type)
+		if isStageActionable(&stage, stageTypesMap) {
+			fmt.Printf("- %s (%s)\n", stage.Name, stage.Type)
 
-		for _, fnConfig := range stage.Functions {
-			for _, fn := range fnConfig.Functions {
-				plainPrintLambda(&fn, verbose)
+			for _, fnConfig := range stage.Functions {
+				for _, fn := range fnConfig.Functions {
+					plainPrintLambda(&fn, verbose)
+				}
+			}
+
+			for _, s3Config := range stage.Buckets {
+				for _, bucket := range s3Config.Buckets {
+					plainPrintS3(&bucket, verbose)
+				}
+			}
+
+			for _, gatewayConfig := range stage.Gateways {
+				for _, gateway := range gatewayConfig.Gateways {
+					plainPrintApiGateway(&gateway, verbose)
+				}
 			}
 		}
-
-		for _, s3Config := range stage.Buckets {
-			for _, bucket := range s3Config.Buckets {
-				plainPrintS3(&bucket, verbose)
-			}
-		}
-
-		for _, gatewayConfig := range stage.Gateways {
-			for _, gateway := range gatewayConfig.Gateways {
-				plainPrintApiGateway(&gateway, verbose)
-			}
-		}
-
 	}
+}
+
+func isStageActionable(stage *types.Stage, stageTypesMap *map[string]bool) bool {
+	if len(*stageTypesMap) == 0 {
+		return true
+	}
+
+	return (*stageTypesMap)[stage.Type]
 }
 
 func plainPrintLambda(lambda *types.LambdaConfig, verbose bool) {
