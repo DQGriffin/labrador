@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/DQGriffin/labrador/internal/commands"
 	"github.com/DQGriffin/labrador/internal/helpers"
@@ -24,6 +25,10 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 				Name:  "only-update",
 				Usage: "Only update resources, skip creating new ones",
 			},
+			&cli.StringFlag{
+				Name:  "stage-types",
+				Usage: "Restrict deployment to specific stage types",
+			},
 		},
 		Before: func(c *cli.Context) error {
 			if c.Bool("only-create") && c.Bool("only-update") {
@@ -32,8 +37,6 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 			return nil
 		},
 		Action: func(c *cli.Context) error {
-			fmt.Println("Deploying...")
-
 			var projectPath = "project.json"
 			if c.String("project") != "" {
 				projectPath = c.String("project")
@@ -80,7 +83,16 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 			onlyCreate := c.Bool("only-create")
 			onlyUpdate := c.Bool("only-update")
 
-			commands.HandleDeployCommand(config, existingLambdas, existingBuckets, onlyCreate, onlyUpdate)
+			stageTypesMap := make(map[string]bool)
+			if c.String("stage-types") != "" {
+				stageTypes := strings.Split(c.String("stage-types"), ",")
+
+				for _, stageType := range stageTypes {
+					stageTypesMap[stageType] = true
+				}
+			}
+
+			commands.HandleDeployCommand(config, &stageTypesMap, existingLambdas, existingBuckets, onlyCreate, onlyUpdate)
 
 			fmt.Println("Done")
 			return nil

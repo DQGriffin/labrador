@@ -11,6 +11,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func IsStageActionable(stage *types.Stage, stageTypesMap *map[string]bool) bool {
+	if len(*stageTypesMap) == 0 {
+		return true
+	}
+
+	return (*stageTypesMap)[stage.Type]
+}
+
 func PtrOrDefault[T any](ptr *T, fallback T) T {
 	if ptr != nil {
 		return *ptr
