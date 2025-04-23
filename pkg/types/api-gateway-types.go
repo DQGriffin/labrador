@@ -10,6 +10,7 @@ type ApiGatewaySettings struct {
 	Description  *string                 `json:"description"`
 	Region       *string                 `json:"region"`
 	Protocol     *string                 `json:"protocol"`
+	Stages       *[]ApiGatewayStage      `json:"stages,omitempty"`
 	Integrations []ApiGatewayIntegration `json:"integrations"`
 	Routes       []ApiGatewayRoute       `json:"routes"`
 	Tags         map[string]string       `json:"tags,omitempty"`
@@ -27,4 +28,11 @@ type ApiGatewayRoute struct {
 	Method string         `json:"method"`
 	Route  string         `json:"route"`
 	Target ResourceTarget `json:"target"`
+}
+
+type ApiGatewayStage struct {
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	AutoDeploy  bool              `json:"automaticDeployment"`
+	Tags        map[string]string `json:"tags,omitempty"`
 }

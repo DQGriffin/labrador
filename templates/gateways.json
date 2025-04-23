@@ -11,6 +11,24 @@
     "gateways": [
         {
             "name": "{{env}}-{{project_name}}-api",
+            "stages": [
+                {
+                    "name": "$default",
+                    "description": "Default stage",
+                    "automaticDeployment": true,
+                    "tags": {
+                        "app": "labrador"
+                    }
+                },
+                {
+                    "name": "dev",
+                    "description": "Dev stage",
+                    "automaticDeployment": false,
+                    "tags": {
+                        "app": "labrador"
+                    }
+                }
+            ],
             "integrations": [
                 {
                     "type": "proxy",

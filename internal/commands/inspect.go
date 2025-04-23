@@ -5,7 +5,7 @@ import (
 	"sort"
 
 	"github.com/DQGriffin/labrador/internal/helpers"
-	"github.com/DQGriffin/labrador/pkg/refs"
+	"github.com/DQGriffin/labrador/internal/services/aws"
 	"github.com/DQGriffin/labrador/pkg/types"
 )
 
@@ -104,6 +104,7 @@ func plainPrintApiGateway(gateway *types.ApiGatewaySettings, verbose bool) {
 	if verbose {
 		fmt.Printf("    - Protocol     : %s\n", helpers.PtrOrDefault(gateway.Protocol, "[protocol not set]"))
 		fmt.Printf("    - Description  : %s\n", helpers.PtrOrDefault(gateway.Description, "[description not set]"))
+		plainPrintApiGatewayStages(gateway.Stages)
 		plainPrintApiGatewayIntegrations(&gateway.Integrations)
 		plainPrintApiGatewayRoutes(&gateway.Routes)
 		fmt.Println("    - Tags         :")
@@ -117,7 +118,7 @@ func plainPrintApiGatewayIntegrations(integrations *[]types.ApiGatewayIntegratio
 	for _, integration := range *integrations {
 		fmt.Printf("      - Type                : %s\n", integration.Type)
 		m := make(map[string]string)
-		arn, err := refs.ResolveTarget(integration.Target, m)
+		arn, err := aws.ResolveTarget(integration.Target, m)
 		if err != nil {
 			fmt.Printf("      - Target              : %s\n", "[unresolved]")
 		}
@@ -133,6 +134,17 @@ func plainPrintApiGatewayRoutes(routes *[]types.ApiGatewayRoute) {
 		fmt.Printf("      - Method  : %s\n", route.Method)
 		fmt.Printf("      - Route   : %s\n", route.Route)
 		fmt.Printf("      - Target  : %s\n", *route.Target.Ref)
+	}
+}
+
+func plainPrintApiGatewayStages(stages *[]types.ApiGatewayStage) {
+	fmt.Println("    - Stages")
+	for _, stage := range *stages {
+		fmt.Printf("      - Name  : %s\n", stage.Name)
+		fmt.Printf("      - Description   : %s\n", stage.Description)
+		fmt.Printf("      - Auto-deploy   : %t\n", stage.AutoDeploy)
+		fmt.Println("      - Tags        :")
+		PrintMapAligned("        - ", stage.Tags)
 	}
 }
 

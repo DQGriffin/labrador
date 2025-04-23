@@ -1,10 +1,9 @@
-package refs
+package aws
 
 import (
 	"errors"
 	"fmt"
 
-	"github.com/DQGriffin/labrador/internal/services/aws"
 	"github.com/DQGriffin/labrador/pkg/types"
 )
 
@@ -57,12 +56,12 @@ func lookupS3Bucket(bucketName string) string {
 }
 
 func lookupLambda(resource types.DynamicResourceRefData) (string, error) {
-	ctx, cfg, err := aws.GetConfig(resource.Region)
+	ctx, cfg, err := GetConfig(resource.Region)
 	if err != nil {
 		return "", nil
 	}
 
-	fn, fnErr := aws.GetLambda(ctx, cfg, resource.Name)
+	fn, fnErr := GetLambda(ctx, cfg, resource.Name)
 	if fnErr != nil {
 		return "", fnErr
 	}
