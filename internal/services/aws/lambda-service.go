@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	internalTypes "github.com/DQGriffin/labrador/internal/types"
 	"github.com/DQGriffin/labrador/pkg/types"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -176,4 +177,22 @@ func DeleteLambda(lambdaName string) {
 	}
 
 	fmt.Printf("Deleted Lambda: %s\n", lambdaName)
+}
+
+func AddPermissionToLambda(ctx context.Context, cfg aws.Config, permission internalTypes.LambdaPermission) error {
+	client := lambda.NewFromConfig(cfg)
+
+	_, err := client.AddPermission(ctx, &lambda.AddPermissionInput{
+		Action:       aws.String(permission.Action),
+		FunctionName: aws.String(permission.FunctionName),
+		Principal:    aws.String(permission.Principal),
+		StatementId:  aws.String(permission.StatementId),
+		SourceArn:    aws.String(permission.SourceArn),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to add permission to %s: %w", permission.FunctionName, err)
+	}
+
+	fmt.Printf("Added permission to lambda %s\n", permission.FunctionName)
+	return nil
 }

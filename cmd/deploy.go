@@ -34,6 +34,27 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 			if c.Bool("only-create") && c.Bool("only-update") {
 				return fmt.Errorf("you can't use --only-create and --only-update at the same time")
 			}
+
+			if c.String("env-file") != "" {
+				helpers.LoadEnvFile(c.String("env-file"))
+			}
+			utils.ReadCliArgs(c)
+
+			if c.String("aws-account-id") != "" {
+				fmt.Println("Using AWS account ID provided in flag")
+				os.Setenv("AWS_ACCOUNT_ID", c.String("aws-account_id"))
+				return nil
+			}
+
+			account, accErr := aws.GetAccountID()
+			if accErr != nil {
+				// Let's not stop execution here
+				fmt.Println("Error", accErr.Error())
+			}
+
+			fmt.Println("Account ID", account)
+			os.Setenv("AWS_ACCOUNT_ID", account)
+
 			return nil
 		},
 		Action: func(c *cli.Context) error {

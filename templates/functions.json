@@ -21,7 +21,7 @@
             "description": "A test function created with Labrador",
             "runtime": "nodejs22.x",
             "code": "sample.zip",
-            "onDelete": "skip",
+            "onDelete": "delete",
             "ref": "auth-func"
         },
         {

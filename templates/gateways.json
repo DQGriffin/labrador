@@ -11,6 +11,7 @@
     "gateways": [
         {
             "name": "{{env}}-{{project_name}}-api",
+            "onDelete": "delete",
             "stages": [
                 {
                     "name": "$default",

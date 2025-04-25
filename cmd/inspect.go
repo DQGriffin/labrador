@@ -7,6 +7,7 @@ import (
 
 	"github.com/DQGriffin/labrador/internal/commands"
 	"github.com/DQGriffin/labrador/internal/helpers"
+	"github.com/DQGriffin/labrador/internal/services/aws"
 	"github.com/DQGriffin/labrador/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -25,13 +26,31 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 				Usage: "Restrict output to specific stage types",
 			},
 		},
-		Action: func(c *cli.Context) error {
-			fmt.Println("Inspecting...")
-
+		Before: func(c *cli.Context) error {
 			if c.String("env-file") != "" {
 				helpers.LoadEnvFile(c.String("env-file"))
 			}
 			utils.ReadCliArgs(c)
+
+			if c.String("aws-account-id") != "" {
+				fmt.Println("Using AWS account ID provided in flag")
+				os.Setenv("AWS_ACCOUNT_ID", c.String("aws-account_id"))
+				return nil
+			}
+
+			account, accErr := aws.GetAccountID()
+			if accErr != nil {
+				// Let's not stop execution here
+				fmt.Println("Error", accErr.Error())
+			}
+
+			fmt.Println("Account ID", account)
+			os.Setenv("AWS_ACCOUNT_ID", account)
+
+			return nil
+		},
+		Action: func(c *cli.Context) error {
+			fmt.Println("Inspecting...")
 
 			var projectPath = "project.json"
 			if c.String("project") != "" {

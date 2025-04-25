@@ -1,11 +1,14 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/DQGriffin/labrador/internal/services/aws"
 	internalTypes "github.com/DQGriffin/labrador/internal/types"
 	"github.com/DQGriffin/labrador/pkg/types"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 )
 
 func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, force bool, stageTypesMap *map[string]bool, env string) error {
@@ -15,6 +18,8 @@ func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, for
 				handleLambdaStage(&stage, isDryRun, force)
 			} else if stage.Type == "s3" {
 				handleS3Stage(&stage, isDryRun, force)
+			} else if stage.Type == "api" {
+				handleApiGatewayStage(&stage, isDryRun, force)
 			}
 		} else {
 			fmt.Println("Skipping stage", stage.Name)
@@ -43,6 +48,17 @@ func handleS3Stage(stage *types.Stage, isDryRun bool, force bool) {
 		handleDryRun(&deletableBuckets, &skippedBuckets)
 	} else {
 		destroyResources(&deletableBuckets, force)
+	}
+}
+
+func handleApiGatewayStage(stage *types.Stage, isDryRun bool, force bool) {
+	fmt.Println("Stage", stage.Name)
+	deletableGateways, skippedGateways := getDeletableApiGateways(&stage.Gateways, stage.Name)
+
+	if isDryRun {
+		handleDryRun(&deletableGateways, &skippedGateways)
+	} else {
+		destroyResources(&deletableGateways, force)
 	}
 }
 
@@ -120,12 +136,50 @@ func getDeletableBuckets(config *[]types.S3Config, stageName string) ([]internal
 	return deletableBuckets, skippedBuckets
 }
 
+func getDeletableApiGateways(config *[]types.ApiGatewayConfig, stageName string) ([]internalTypes.UniversalResourceDefinition, []internalTypes.UniversalResourceDefinition) {
+	var deletableGateways []internalTypes.UniversalResourceDefinition
+	var skippedGateways []internalTypes.UniversalResourceDefinition
+
+	for _, stageGateways := range *config {
+		for _, gateway := range stageGateways.Gateways {
+			if (gateway.OnDelete == nil) || (gateway.OnDelete != nil && *gateway.OnDelete != "skip") {
+				deletableGateways = append(deletableGateways, internalTypes.UniversalResourceDefinition{
+					Name:         *gateway.Name,
+					StageName:    stageName,
+					Arn:          "",
+					ResourceType: "api",
+					Region:       *gateway.Region,
+				})
+			} else {
+				skippedGateways = append(skippedGateways, internalTypes.UniversalResourceDefinition{
+					Name:         *gateway.Name,
+					StageName:    stageName,
+					Arn:          "",
+					ResourceType: "api",
+					Region:       *gateway.Region,
+				})
+			}
+		}
+	}
+
+	return deletableGateways, skippedGateways
+}
+
 func destroyResources(resources *[]internalTypes.UniversalResourceDefinition, force bool) {
 	for _, resource := range *resources {
 		if resource.ResourceType == "lambda" {
 			aws.DeleteLambda(resource.Name)
 		} else if resource.ResourceType == "s3" {
 			aws.DeleteBucket(resource.Name, force)
+		} else if resource.ResourceType == "api" {
+
+			ctx := context.TODO()
+			cfg, _ := config.LoadDefaultConfig(ctx, config.WithRegion(resource.Region))
+			client := apigatewayv2.NewFromConfig(cfg)
+			err := aws.DestroyApiGateway(ctx, *client, resource.Name)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
 		}
 	}
 }

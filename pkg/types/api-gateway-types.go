@@ -7,6 +7,7 @@ type ApiGatewayConfig struct {
 
 type ApiGatewaySettings struct {
 	Name         *string                 `json:"name"`
+	OnDelete     *string                 `json:"onDelete"`
 	Description  *string                 `json:"description"`
 	Region       *string                 `json:"region"`
 	Protocol     *string                 `json:"protocol"`

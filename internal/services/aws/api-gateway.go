@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 
+	internalTypes "github.com/DQGriffin/labrador/internal/types"
 	"github.com/DQGriffin/labrador/pkg/types"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -46,7 +48,7 @@ func setApiGatewaySettings(gateway *types.ApiGatewaySettings, refMap *map[string
 		return stageErr
 	}
 
-	integrationRefs, err := addIntegrations(&gateway.Integrations, refMap, ctx, client, apiId)
+	integrationRefs, err := addIntegrations(&gateway.Integrations, *gateway.Region, refMap, ctx, client, apiId)
 
 	if err != nil {
 		return err
@@ -60,7 +62,7 @@ func setApiGatewaySettings(gateway *types.ApiGatewaySettings, refMap *map[string
 	return nil
 }
 
-func addIntegrations(integrations *[]types.ApiGatewayIntegration, refMap *map[string]string, ctx context.Context, client apigatewayv2.Client, apiId string) (map[string]string, error) {
+func addIntegrations(integrations *[]types.ApiGatewayIntegration, region string, refMap *map[string]string, ctx context.Context, client apigatewayv2.Client, apiId string) (map[string]string, error) {
 	integrationRefMap := make(map[string]string)
 
 	for _, integration := range *integrations {
@@ -88,6 +90,24 @@ func addIntegrations(integrations *[]types.ApiGatewayIntegration, refMap *map[st
 			integrationRefMap[integration.Ref] = integrationID
 		}
 
+		accountId := os.Getenv("AWS_ACCOUNT_ID")
+		arn := fmt.Sprintf("arn:aws:execute-api:%s:%s:%s/*/*/*", region, accountId, apiId)
+
+		permission := &internalTypes.LambdaPermission{
+			FunctionName: integration.Target.External.Dynamic.Name,
+			Action:       "lambda:InvokeFunction",
+			Principal:    "apigateway.amazonaws.com",
+			StatementId:  fmt.Sprintf("apigateway-%s-invoke", apiId),
+			SourceArn:    arn,
+		}
+
+		ctx, cfg, err := GetConfig(region)
+		if err != nil {
+			return integrationRefMap, fmt.Errorf("failed to add permission to lambda: %w", err)
+		}
+
+		AddPermissionToLambda(ctx, cfg, *permission)
+
 		fmt.Println("Created integration:", integrationID)
 	}
 
@@ -111,6 +131,7 @@ func addRoutes(routes *[]types.ApiGatewayRoute, refMap *map[string]string, ctx c
 		if err != nil {
 			return fmt.Errorf("failed to create route: %w", err)
 		}
+
 		fmt.Println("Created route GET /users")
 	}
 
@@ -132,5 +153,38 @@ func createStages(stages *[]types.ApiGatewayStage, ctx context.Context, client a
 
 		fmt.Printf("Created stage: %s\n", stage.Name)
 	}
+	return nil
+}
+
+func GetApiIDByName(ctx context.Context, client *apigatewayv2.Client, targetName string) (string, error) {
+	output, err := client.GetApis(ctx, &apigatewayv2.GetApisInput{})
+	if err != nil {
+		return "", fmt.Errorf("failed to list APIs: %w", err)
+	}
+
+	for _, api := range output.Items {
+		if api.Name != nil && *api.Name == targetName {
+			return *api.ApiId, nil
+		}
+	}
+
+	return "", fmt.Errorf("API with name %q not found", targetName)
+}
+
+func DestroyApiGateway(ctx context.Context, client apigatewayv2.Client, gatewayName string) error {
+	fmt.Printf("Deleting API Gateway %s\n", gatewayName)
+	apiId, err := GetApiIDByName(ctx, &client, gatewayName)
+	if err != nil {
+		return err
+	}
+
+	_, deleteErr := client.DeleteApi(ctx, &apigatewayv2.DeleteApiInput{
+		ApiId: &apiId,
+	})
+
+	if deleteErr != nil {
+		return deleteErr
+	}
+
 	return nil
 }
