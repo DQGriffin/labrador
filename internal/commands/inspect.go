@@ -121,8 +121,9 @@ func plainPrintApiGatewayIntegrations(integrations *[]types.ApiGatewayIntegratio
 		arn, err := aws.ResolveTarget(integration.Target, m)
 		if err != nil {
 			fmt.Printf("      - Target              : %s\n", "[unresolved]")
+		} else {
+			fmt.Printf("      - Target              : %s\n", arn)
 		}
-		fmt.Printf("      - Target              : %s\n", arn)
 		fmt.Printf("      - Payload version     : %s\n", integration.PayloadVersion)
 		fmt.Printf("      - Integration method  : %s\n", integration.IntegrationMethod)
 	}

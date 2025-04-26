@@ -156,6 +156,11 @@ func GetLambda(ctx context.Context, cfg aws.Config, lambdaName string) (lambdaTy
 	output, err := client.GetFunction(ctx, &lambda.GetFunctionInput{
 		FunctionName: aws.String(lambdaName),
 	})
+
+	if err != nil {
+		return lambdaTypes.FunctionConfiguration{}, err
+	}
+
 	fn := *output.Configuration
 
 	return fn, err
