@@ -22,8 +22,12 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 				Usage: "Output all information for resources",
 			},
 			&cli.StringFlag{
+				Name:  "output",
+				Usage: "Set output mode (plain, tree)",
+			},
+			&cli.StringFlag{
 				Name:  "stage-types",
-				Usage: "Restrict output to specific stage types",
+				Usage: "Comma-separated list of stage types to include (e.g., 'lambda,api')",
 			},
 		},
 		Before: func(c *cli.Context) error {
@@ -78,7 +82,12 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 				}
 			}
 
-			commands.HandleInspectCommand(&config, "plain", &stageTypesMap, verbose)
+			var outputMode = "tree"
+			if c.String("output") != "" {
+				outputMode = c.String("output")
+			}
+
+			commands.HandleInspectCommand(&config, outputMode, &stageTypesMap, verbose)
 
 			return nil
 		},
