@@ -28,6 +28,7 @@ type LambdaConfig struct {
 	MemorySize  *uint16           `json:"memory"`
 	Timeout     *uint16           `json:"timeout"`
 	Description *string           `json:"description"`
+	OnDelete    *string           `json:"onDelete"`
 	Tags        map[string]string `json:"tags,omitempty"`
 	Environment map[string]string `json:"environment,omitempty"`
 }

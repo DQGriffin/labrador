@@ -1,11 +1,13 @@
-package lambda
+package aws
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
 
+	internalTypes "github.com/DQGriffin/labrador/internal/types"
 	"github.com/DQGriffin/labrador/pkg/types"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -146,4 +148,56 @@ func UpdateLambdaConfiguration(lambdaConfig types.LambdaConfig) {
 	if err != nil {
 		log.Fatalf("Failed to update function config: %v", err)
 	}
+}
+
+func GetLambda(ctx context.Context, cfg aws.Config, lambdaName string) (lambdaTypes.FunctionConfiguration, error) {
+	client := lambda.NewFromConfig(cfg)
+
+	output, err := client.GetFunction(ctx, &lambda.GetFunctionInput{
+		FunctionName: aws.String(lambdaName),
+	})
+
+	if err != nil {
+		return lambdaTypes.FunctionConfiguration{}, err
+	}
+
+	fn := *output.Configuration
+
+	return fn, err
+}
+
+func DeleteLambda(lambdaName string) {
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
+	if err != nil {
+		log.Fatalf("Unable to load AWS config: %v", err)
+	}
+
+	client := lambda.NewFromConfig(cfg)
+
+	_, deleteErr := client.DeleteFunction(context.TODO(), &lambda.DeleteFunctionInput{
+		FunctionName: aws.String(lambdaName),
+	})
+	if deleteErr != nil {
+		fmt.Printf("failed to delete Lambda %s: %w", lambdaName, err)
+	}
+
+	fmt.Printf("Deleted Lambda: %s\n", lambdaName)
+}
+
+func AddPermissionToLambda(ctx context.Context, cfg aws.Config, permission internalTypes.LambdaPermission) error {
+	client := lambda.NewFromConfig(cfg)
+
+	_, err := client.AddPermission(ctx, &lambda.AddPermissionInput{
+		Action:       aws.String(permission.Action),
+		FunctionName: aws.String(permission.FunctionName),
+		Principal:    aws.String(permission.Principal),
+		StatementId:  aws.String(permission.StatementId),
+		SourceArn:    aws.String(permission.SourceArn),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to add permission to %s: %w", permission.FunctionName, err)
+	}
+
+	fmt.Printf("Added permission to lambda %s\n", permission.FunctionName)
+	return nil
 }

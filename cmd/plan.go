@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/DQGriffin/labrador/internal/aws/lambda"
 	"github.com/DQGriffin/labrador/internal/helpers"
+	"github.com/DQGriffin/labrador/internal/services/aws"
 	"github.com/DQGriffin/labrador/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -35,7 +35,7 @@ func PlanCommand(flags []cli.Flag) *cli.Command {
 
 			utils.ReadCliArgs(c)
 
-			existingLambdas, err := lambda.ListLambdas()
+			existingLambdas, err := aws.ListLambdas()
 
 			if err != nil {
 				fmt.Println("An error occured while listing lambdas in the AWS account. ", err.Error())

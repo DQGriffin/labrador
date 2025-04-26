@@ -1,0 +1,27 @@
+{
+    "defaults": {
+        "name": "Temp Storage Bucket",
+        "region": "us-east-2",
+        "versioning": true,
+        "onDelete": "delete",
+        "blockPublicAccess": true,
+        "staticHosting": {
+            "enabled": true,
+            "indexDocument": "index.html",
+            "errorDocument": "error.html"
+        },
+        "tags": {
+            "app": "labrador",
+            "env": "{{env}}"
+        }
+    },
+    "buckets": [
+        {
+            "name": "{{env}}-{{project_name}}-assets-5",
+            "onDelete": "delete",
+            "staticHosting": {
+                "enabled": false
+            }
+        }
+    ]
+}

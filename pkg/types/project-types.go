@@ -1,5 +1,10 @@
 package types
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type Project struct {
 	Name        string            `json:"name"`
 	Environment string            `json:"environment"`
@@ -18,9 +23,19 @@ type Stage struct {
 	Environments []string `json:"environments"`
 	Hooks        Hooks    `json:"hooks"`
 	Functions    []LambdaData
+	Buckets      []S3Config
+	Gateways     []ApiGatewayConfig
 }
 
 type Hooks struct {
 	Pre  string `json:"pre"`
 	Post string `json:"post"`
+}
+
+func (e Project) String() string {
+	b, err := json.MarshalIndent(e, "", "  ")
+	if err != nil {
+		return fmt.Sprintf("TelephonyEvent<error: %v>", err)
+	}
+	return string(b)
 }
