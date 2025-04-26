@@ -24,7 +24,7 @@ func HandleInspectCommand(config *types.LabradorConfig, format string, stageType
 }
 
 func printTree(config *types.LabradorConfig, stageTypesMap *map[string]bool, verbose bool) {
-	rootStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("35"))
+	rootStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("252"))
 	t := tree.Root(config.Project.Name).RootStyle(rootStyle)
 
 	nodes := generateStageNodes(&config.Project.Stages, stageTypesMap, verbose)
