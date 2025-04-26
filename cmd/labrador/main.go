@@ -64,15 +64,18 @@ var globalFlags = []cli.Flag{
 	},
 }
 
+var Version = "0.1.0"
+
 func main() {
 	err := godotenv.Load(".labrador.env")
 	if err != nil {
 		// Not an error. .labrador.env is optional
 	}
 	app := &cli.App{
-		Name:  "labrador",
-		Usage: "Deploy and manage AWS resources",
-		Flags: globalFlags,
+		Name:    "labrador",
+		Usage:   "Deploy and manage AWS resources",
+		Version: Version,
+		Flags:   globalFlags,
 		Commands: []*cli.Command{
 			cmd.DeployCommand(globalFlags),
 			cmd.InitCommand(globalFlags),
