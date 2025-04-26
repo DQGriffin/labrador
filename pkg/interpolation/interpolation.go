@@ -24,8 +24,10 @@ func ResolveVariable(value string, vars map[string]string) string {
 		value = strings.ReplaceAll(value, "{{"+k+"}}", v)
 	}
 
-	// Replace $VAR from the OS environment
-	value = os.ExpandEnv(value)
+	if value != "$default" {
+		// Replace $VAR from the OS environment
+		value = os.ExpandEnv(value)
+	}
 
 	return value
 }

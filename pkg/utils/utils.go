@@ -4,11 +4,45 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 
 	"github.com/DQGriffin/labrador/pkg/types"
 	lambdaTypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/urfave/cli/v2"
 )
+
+func ApplyDefaults[T any](target *T, defaults T) error {
+	targetVal := reflect.ValueOf(target).Elem()
+	defaultVal := reflect.ValueOf(defaults)
+
+	if targetVal.Type() != defaultVal.Type() {
+		fmt.Printf("Target type: %s, defaults type: %s\n", targetVal.Type(), defaultVal.Type())
+		return fmt.Errorf("target and defaults must be the same type")
+	}
+
+	for i := 0; i < targetVal.NumField(); i++ {
+		// field := targetVal.Type().Field(i)
+
+		// Only apply to exported fields
+		if !targetVal.Field(i).CanSet() {
+			fmt.Println("cannot set")
+			continue
+		}
+
+		targetField := targetVal.Field(i)
+		defaultField := defaultVal.Field(i)
+
+		// Skip if already set
+		if !targetField.IsZero() {
+			continue
+		}
+
+		// Set the default value
+		targetField.Set(defaultField)
+	}
+
+	return nil
+}
 
 func ReadCliArgs(c *cli.Context) {
 	if c.String("aws-access-key-id") != "" {
@@ -95,6 +129,98 @@ func ReadFunctionConfigs(stages *[]types.Stage) ([]types.LambdaData, error) {
 	}
 
 	return configs, nil
+}
+
+func ReadS3Configs(stages *[]types.Stage) ([]types.S3Config, error) {
+	var configs []types.S3Config
+
+	for i := range *stages {
+		stage := &(*stages)[i]
+
+		if stage.Type == "s3" {
+			config, err := readS3Config(stage.ConfigFile)
+
+			if err != nil {
+				return configs, err
+			}
+
+			for i := range config.Buckets {
+				ApplyDefaults(&config.Buckets[i], *config.Defaults)
+			}
+
+			configs = append(configs, config)
+			stage.Buckets = append(stage.Buckets, config)
+		}
+	}
+
+	return configs, nil
+}
+
+func readS3Config(filepath string) (types.S3Config, error) {
+	var config types.S3Config
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		fmt.Println("Failed to read s3 config")
+		fmt.Println(err.Error())
+		return config, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&config); err != nil {
+		fmt.Println("Failed to decode s3 config")
+		fmt.Println(err.Error())
+		return config, err
+	}
+
+	return config, nil
+}
+
+func ReadApiGatewayConfigs(stages *[]types.Stage) ([]types.ApiGatewayConfig, error) {
+	var configs []types.ApiGatewayConfig
+
+	for i := range *stages {
+		stage := &(*stages)[i]
+
+		if stage.Type == "api" {
+			config, err := readApiGatewayConfig(stage.ConfigFile)
+
+			if err != nil {
+				return configs, err
+			}
+
+			for i := range config.Gateways {
+				ApplyDefaults(&config.Gateways[i], *config.Defaults)
+			}
+
+			configs = append(configs, config)
+			stage.Gateways = append(stage.Gateways, config)
+		}
+	}
+
+	return configs, nil
+}
+
+func readApiGatewayConfig(filepath string) (types.ApiGatewayConfig, error) {
+	var config types.ApiGatewayConfig
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		fmt.Println("Failed to read API gateway config")
+		fmt.Println(err.Error())
+		return config, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&config); err != nil {
+		fmt.Println("Failed to decode API gateway config")
+		fmt.Println(err.Error())
+		return config, err
+	}
+
+	return config, nil
 }
 
 func ApplyDefaultsToFunctions(functionData *types.LambdaData) {

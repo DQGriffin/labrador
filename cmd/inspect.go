@@ -12,29 +12,21 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func DeployCommand(flags []cli.Flag) *cli.Command {
+func InspectCommand(flags []cli.Flag) *cli.Command {
 	return &cli.Command{
-		Name:  "deploy",
-		Usage: "Deploy Lambda functions defined in your config",
+		Name:  "inspect",
+		Usage: "Inspect project configurations",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:  "only-create",
-				Usage: "Only create new resources, skip updating existing ones",
-			},
-			&cli.BoolFlag{
-				Name:  "only-update",
-				Usage: "Only update resources, skip creating new ones",
+				Name:  "verbose",
+				Usage: "Output all information for resources",
 			},
 			&cli.StringFlag{
 				Name:  "stage-types",
-				Usage: "Restrict deployment to specific stage types",
+				Usage: "Restrict output to specific stage types",
 			},
 		},
 		Before: func(c *cli.Context) error {
-			if c.Bool("only-create") && c.Bool("only-update") {
-				return fmt.Errorf("you can't use --only-create and --only-update at the same time")
-			}
-
 			if c.String("env-file") != "" {
 				helpers.LoadEnvFile(c.String("env-file"))
 			}
@@ -58,15 +50,13 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 			return nil
 		},
 		Action: func(c *cli.Context) error {
+			fmt.Println("Inspecting...")
+
 			var projectPath = "project.json"
 			if c.String("project") != "" {
 				projectPath = c.String("project")
 			} else {
 				fmt.Println("Project config file path not specified. Assuming project.json")
-			}
-
-			if c.String("env-file") != "" {
-				helpers.LoadEnvFile(c.String("env-file"))
 			}
 
 			config, err := helpers.LoadProject(projectPath)
@@ -77,32 +67,7 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 				os.Exit(1)
 			}
 
-			utils.ReadCliArgs(c)
-
-			existingLambdas, err := aws.ListLambdas()
-
-			if err != nil {
-				fmt.Println("Error: Could not list lambdas in AWS account. Check permissions ", err.Error())
-				os.Exit(1)
-			}
-
-			ctx, cfg, err := aws.GetConfig("us-east-1")
-
-			if err != nil {
-				return err
-			}
-
-			client := aws.GetClient(cfg)
-
-			existingBuckets, bucketErr := aws.ListBuckets(ctx, client)
-
-			if bucketErr != nil {
-				fmt.Println("Error: Could not list buckets in AWS account. Check permissions ", bucketErr.Error())
-				os.Exit(1)
-			}
-
-			onlyCreate := c.Bool("only-create")
-			onlyUpdate := c.Bool("only-update")
+			verbose := c.Bool("verbose")
 
 			stageTypesMap := make(map[string]bool)
 			if c.String("stage-types") != "" {
@@ -113,9 +78,8 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 				}
 			}
 
-			commands.HandleDeployCommand(config, &stageTypesMap, existingLambdas, existingBuckets, onlyCreate, onlyUpdate)
+			commands.HandleInspectCommand(&config, "plain", &stageTypesMap, verbose)
 
-			fmt.Println("Done")
 			return nil
 		},
 	}

@@ -24,7 +24,17 @@
             "name": "Cache Buckets",
             "type": "s3",
             "enabled": true,
-            "config": "./buckets.json",
+            "config": "{{function_config_dir}}/buckets.json",
+            "dependsOn": ["Auth Lambdas"],
+            "onConflict": "update",
+            "onError": "stop",
+            "environments": ["staging", "prod"]
+        },
+        {
+            "name": "API Gateways",
+            "type": "api",
+            "enabled": true,
+            "config": "{{function_config_dir}}/gateways.json",
             "dependsOn": ["Auth Lambdas"],
             "onConflict": "update",
             "onError": "stop",

@@ -20,7 +20,9 @@
             "name": "{{env}}-{{project_name}}-auth",
             "description": "A test function created with Labrador",
             "runtime": "nodejs22.x",
-            "code": "sample.zip"
+            "code": "sample.zip",
+            "onDelete": "delete",
+            "ref": "auth-func"
         },
         {
             "name": "{{env}}-{{project_name}}-users",

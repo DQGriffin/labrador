@@ -1,0 +1,64 @@
+{
+    "defaults": {
+        "protocol": "http",
+        "region": "us-east-1",
+        "description": "API Gateway created by labrador",
+        "tags": {
+            "app": "labrador",
+            "env": "{{env}}"
+        }
+    },
+    "gateways": [
+        {
+            "name": "{{env}}-{{project_name}}-api",
+            "onDelete": "delete",
+            "stages": [
+                {
+                    "name": "$default",
+                    "description": "Default stage",
+                    "automaticDeployment": true,
+                    "tags": {
+                        "app": "labrador"
+                    }
+                },
+                {
+                    "name": "dev",
+                    "description": "Dev stage",
+                    "automaticDeployment": false,
+                    "tags": {
+                        "app": "labrador"
+                    }
+                }
+            ],
+            "integrations": [
+                {
+                    "type": "proxy",
+                    "uri": "[[auth-func]]",
+                    "payloadVersion": "2.0",
+                    "integrationMethod": "POST",
+                    "ref": "auth-func-int",
+                    "target": {
+                        "ref": "",
+                        "external": {
+                            "arn": "",
+                            "dynamic": {
+                                "name": "{{env}}-{{project_name}}-auth",
+                                "region": "us-east-1",
+                                "type": "lambda"
+                            }
+                        }
+                    }
+                }
+            ],
+            "routes": [
+                {
+                    "method": "GET",
+                    "route": "/users",
+                    "target": {
+                        "ref": "auth-func-int"
+                    }
+                }
+            ]
+        }
+    ]
+}
