@@ -38,7 +38,7 @@ func DestroyCommand(flags []cli.Flag) *cli.Command {
 			return nil
 		},
 		Action: func(c *cli.Context) error {
-			console.Info("Destroy")
+			console.Debug("Destroy")
 
 			if c.String("env-file") != "" {
 				helpers.LoadEnvFile(c.String("env-file"))

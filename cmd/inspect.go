@@ -57,7 +57,7 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 			return nil
 		},
 		Action: func(c *cli.Context) error {
-			console.Info("Inspecting...")
+			console.Debug("Inspecting...")
 
 			var projectPath = "project.json"
 			if c.String("project") != "" {

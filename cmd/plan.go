@@ -20,7 +20,7 @@ func PlanCommand(flags []cli.Flag) *cli.Command {
 			return nil
 		},
 		Action: func(c *cli.Context) error {
-			console.Info("planning...")
+			console.Debug("planning...")
 
 			var projectPath = "project.json"
 			if c.String("project") != "" {
