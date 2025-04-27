@@ -78,12 +78,21 @@ func deployS3Stage(stage *types.Stage, existingBuckets map[string]bool, onlyCrea
 			client := aws.GetClient(cfg)
 
 			if _, exists := existingBuckets[*bucket.Name]; exists {
+				if onlyCreate {
+					console.Debugf("Skipping updating bucket %s because --only-create is set", *bucket.Name)
+					continue
+				}
+
 				updateErr := aws.UpdateBucket(ctx, *client, bucket)
 				if updateErr != nil {
 					fmt.Println(updateErr.Error())
 				}
 
 			} else {
+				if onlyUpdate {
+					console.Debugf("Skipping creating bucket %s because --only-update is set", *bucket.Name)
+					continue
+				}
 				createErr := aws.CreateBucket(ctx, cfg, *client, bucket)
 				if createErr != nil {
 					fmt.Println(createErr.Error())
