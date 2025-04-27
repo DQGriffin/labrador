@@ -107,8 +107,8 @@ func Errorf(format string, args ...interface{}) {
 	}
 }
 
-func Fatal(text string) {
-	Error(text)
+func Fatal(args ...interface{}) {
+	Error(args...)
 	os.Exit(1)
 }
 

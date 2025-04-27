@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/DQGriffin/labrador/internal/cli/console"
@@ -78,8 +77,7 @@ func LoadProject(filepath string) (types.LabradorConfig, error) {
 	functionData, readErr := utils.ReadFunctionConfigs(&project.Stages)
 
 	if readErr != nil {
-		fmt.Println(readErr)
-		os.Exit(1)
+		console.Fatal(readErr)
 	}
 
 	for i := range functionData {
@@ -97,8 +95,7 @@ func LoadProject(filepath string) (types.LabradorConfig, error) {
 	s3Configs, s3Err := utils.ReadS3Configs(&project.Stages)
 
 	if s3Err != nil {
-		fmt.Println(s3Err)
-		os.Exit(1)
+		console.Fatal(s3Err)
 	}
 
 	for i := range s3Configs {
@@ -112,8 +109,7 @@ func LoadProject(filepath string) (types.LabradorConfig, error) {
 
 	gatewayConfigs, gatewayErr := utils.ReadApiGatewayConfigs(&project.Stages)
 	if gatewayErr != nil {
-		fmt.Println(gatewayErr)
-		os.Exit(1)
+		console.Fatal(gatewayErr)
 	}
 
 	for i := range gatewayConfigs {

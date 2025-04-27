@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 
+	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/internal/helpers"
 	"github.com/DQGriffin/labrador/internal/services/aws"
 	"github.com/DQGriffin/labrador/pkg/types"
@@ -21,19 +22,19 @@ func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]
 }
 
 func deployLambdaStage(stage *types.Stage, existingLambdas map[string]lambdaTypes.FunctionConfiguration, onlyCreate bool, onlyUpdate bool) {
-	fmt.Printf("Deploying Stage: %s\n", stage.Name)
-	fmt.Printf("Type: %s\n", stage.Type)
+	console.Infof("Deploying Stage: %s", stage.Name)
+	console.Infof("Type: %s", stage.Type)
 
 	for _, fnConfig := range stage.Functions {
 		for _, fn := range fnConfig.Functions {
 			if _, exists := existingLambdas[fn.Name]; exists {
 				if !onlyCreate {
-					fmt.Println("updating function", fn.Name)
+					console.Info("updating function", fn.Name)
 					aws.UpdateLambda(fn)
 				}
 			} else {
 				if !onlyUpdate {
-					fmt.Println("creating function", fn.Name)
+					console.Info("creating function", fn.Name)
 					aws.CreateLambda(fn)
 				}
 			}
@@ -42,8 +43,8 @@ func deployLambdaStage(stage *types.Stage, existingLambdas map[string]lambdaType
 }
 
 func deployApiGatewayStage(stage *types.Stage, onlyCreate bool, onlyUpdate bool) {
-	fmt.Printf("Deploying Stage: %s\n", stage.Name)
-	fmt.Printf("Type: %s\n", stage.Type)
+	console.Infof("Deploying Stage: %s\n", stage.Name)
+	console.Infof("Type: %s\n", stage.Type)
 
 	for _, gatewayConfig := range stage.Gateways {
 		for _, gateway := range gatewayConfig.Gateways {
@@ -58,6 +59,9 @@ func deployApiGatewayStage(stage *types.Stage, onlyCreate bool, onlyUpdate bool)
 }
 
 func deployS3Stage(stage *types.Stage, existingBuckets map[string]bool, onlyCreate bool, onlyUpdate bool) error {
+	console.Infof("Deploying Stage: %s\n", stage.Name)
+	console.Infof("Type: %s\n", stage.Type)
+
 	for _, bucketConfig := range stage.Buckets {
 		for _, bucket := range bucketConfig.Buckets {
 			ctx, cfg, err := aws.GetConfig(*bucket.Region)

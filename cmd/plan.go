@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
+	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/internal/helpers"
 	"github.com/DQGriffin/labrador/internal/services/aws"
 	"github.com/DQGriffin/labrador/pkg/utils"
@@ -15,22 +13,27 @@ func PlanCommand(flags []cli.Flag) *cli.Command {
 		Name:  "plan",
 		Usage: "Preview actions labrador will take",
 		Flags: flags,
+		Before: func(c *cli.Context) error {
+			console.SetColorEnabled(!c.Bool("no-color"))
+			console.SetDebugOutputEnabled(c.Bool("debug"))
+
+			return nil
+		},
 		Action: func(c *cli.Context) error {
-			fmt.Println("Planning...")
+			console.Info("planning...")
 
 			var projectPath = "project.json"
 			if c.String("project") != "" {
 				projectPath = c.String("project")
 			} else {
-				fmt.Println("Project config file path not specified. Assuming project.json")
+				console.Info("Project config file path not specified. Assuming project.json")
 			}
 
 			config, err := helpers.LoadProject(projectPath)
 
 			if err != nil {
-				fmt.Println("Error: Could not load project configuration")
-				fmt.Println(err.Error())
-				os.Exit(1)
+				console.Error("Error: Could not load project configuration")
+				console.Fatal(err.Error())
 			}
 
 			utils.ReadCliArgs(c)
@@ -38,8 +41,7 @@ func PlanCommand(flags []cli.Flag) *cli.Command {
 			existingLambdas, err := aws.ListLambdas()
 
 			if err != nil {
-				fmt.Println("An error occured while listing lambdas in the AWS account. ", err.Error())
-				os.Exit(1)
+				console.Fatal("An error occured while listing lambdas in the AWS account. ", err.Error())
 			}
 
 			var createCount = 0
@@ -48,16 +50,16 @@ func PlanCommand(flags []cli.Flag) *cli.Command {
 			for _, functionGroup := range config.FunctionData {
 				for _, function := range functionGroup.Functions {
 					if _, exists := existingLambdas[function.Name]; exists {
-						fmt.Println("Will be updated:", function.Name)
+						console.Info("Will be updated:", function.Name)
 						updateCount += 1
 					} else {
-						fmt.Println("Will be created", function.Name)
+						console.Info("Will be created", function.Name)
 						createCount += 1
 					}
 				}
 			}
 
-			fmt.Printf("Plan complete: %d to create, %d to update, %d to destroy\n", createCount, updateCount, 0)
+			console.Infof("Plan complete: %d to create, %d to update, %d to destroy\n", createCount, updateCount, 0)
 
 			return nil
 		},

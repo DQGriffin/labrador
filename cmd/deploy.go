@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/internal/commands"
 	"github.com/DQGriffin/labrador/internal/helpers"
 	"github.com/DQGriffin/labrador/internal/services/aws"
@@ -31,6 +32,9 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 			},
 		},
 		Before: func(c *cli.Context) error {
+			console.SetColorEnabled(!c.Bool("no-color"))
+			console.SetDebugOutputEnabled(c.Bool("debug"))
+
 			if c.Bool("only-create") && c.Bool("only-update") {
 				return fmt.Errorf("you can't use --only-create and --only-update at the same time")
 			}
@@ -41,7 +45,7 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 			utils.ReadCliArgs(c)
 
 			if c.String("aws-account-id") != "" {
-				fmt.Println("Using AWS account ID provided in flag")
+				console.Debug("Using AWS account ID provided in flag")
 				os.Setenv("AWS_ACCOUNT_ID", c.String("aws-account_id"))
 				return nil
 			}
@@ -49,10 +53,10 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 			account, accErr := aws.GetAccountID()
 			if accErr != nil {
 				// Let's not stop execution here
-				fmt.Println("Error", accErr.Error())
+				console.Error(accErr.Error())
 			}
 
-			fmt.Println("Account ID", account)
+			console.Debug("Account ID", account)
 			os.Setenv("AWS_ACCOUNT_ID", account)
 
 			return nil
@@ -62,7 +66,7 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 			if c.String("project") != "" {
 				projectPath = c.String("project")
 			} else {
-				fmt.Println("Project config file path not specified. Assuming project.json")
+				console.Info("Project config file path not specified. Assuming project.json")
 			}
 
 			if c.String("env-file") != "" {
@@ -72,8 +76,8 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 			config, err := helpers.LoadProject(projectPath)
 
 			if err != nil {
-				fmt.Println("Error: Could not load project configuration")
-				fmt.Println(err.Error())
+				console.Error("Could not load project configuration")
+				console.Fatal(err.Error())
 				os.Exit(1)
 			}
 
@@ -82,8 +86,7 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 			existingLambdas, err := aws.ListLambdas()
 
 			if err != nil {
-				fmt.Println("Error: Could not list lambdas in AWS account. Check permissions ", err.Error())
-				os.Exit(1)
+				console.Fatal("Could not list lambdas in AWS account. Check permissions ", err.Error())
 			}
 
 			ctx, cfg, err := aws.GetConfig("us-east-1")
@@ -97,8 +100,7 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 			existingBuckets, bucketErr := aws.ListBuckets(ctx, client)
 
 			if bucketErr != nil {
-				fmt.Println("Error: Could not list buckets in AWS account. Check permissions ", bucketErr.Error())
-				os.Exit(1)
+				console.Fatal("Could not list buckets in AWS account. Check permissions ", bucketErr.Error())
 			}
 
 			onlyCreate := c.Bool("only-create")
@@ -115,7 +117,7 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 
 			commands.HandleDeployCommand(config, &stageTypesMap, existingLambdas, existingBuckets, onlyCreate, onlyUpdate)
 
-			fmt.Println("Done")
+			console.Info("Done")
 			return nil
 		},
 	}

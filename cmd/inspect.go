@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -49,7 +48,7 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 			account, accErr := aws.GetAccountID()
 			if accErr != nil {
 				// Let's not stop execution here
-				fmt.Println("Error", accErr.Error())
+				console.Error(accErr.Error())
 			}
 
 			console.Debug("Account ID ", account)
@@ -64,7 +63,7 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 			if c.String("project") != "" {
 				projectPath = c.String("project")
 			} else {
-				fmt.Println("Project config file path not specified. Assuming project.json")
+				console.Info("Project config file path not specified. Assuming project.json")
 			}
 
 			config, err := helpers.LoadProject(projectPath)
