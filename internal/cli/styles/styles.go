@@ -9,5 +9,11 @@ var secondaryColors = lipgloss.AdaptiveColor{Light: "230", Dark: "248"}
 var Secondary = lipgloss.NewStyle().Foreground(secondaryColors)
 
 var tertiaryColors = lipgloss.AdaptiveColor{Light: "232", Dark: "246"}
-var tertiaryColorsB = lipgloss.AdaptiveColor{Light: "230", Dark: "248"}
 var Tertiary = lipgloss.NewStyle().Foreground(tertiaryColors).Italic(true)
+
+var errorForeground = lipgloss.AdaptiveColor{Light: "232", Dark: "15"}
+var errorBackground = lipgloss.AdaptiveColor{Light: "232", Dark: "88"}
+var Error = lipgloss.NewStyle().Foreground(errorForeground).Background(errorBackground).Bold(true)
+
+var warnForeground = lipgloss.AdaptiveColor{Light: "232", Dark: "11"}
+var Warn = lipgloss.NewStyle().Foreground(warnForeground)

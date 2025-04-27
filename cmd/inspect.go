@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/internal/commands"
 	"github.com/DQGriffin/labrador/internal/helpers"
 	"github.com/DQGriffin/labrador/internal/services/aws"
@@ -36,8 +37,11 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 			}
 			utils.ReadCliArgs(c)
 
+			console.SetColorEnabled(!c.Bool("no-color"))
+			console.SetDebugOutputEnabled(c.Bool("debug"))
+
 			if c.String("aws-account-id") != "" {
-				fmt.Println("Using AWS account ID provided in flag")
+				console.Debug("Using AWS account ID provided in flag")
 				os.Setenv("AWS_ACCOUNT_ID", c.String("aws-account_id"))
 				return nil
 			}
@@ -48,13 +52,13 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 				fmt.Println("Error", accErr.Error())
 			}
 
-			fmt.Println("Account ID", account)
+			console.Debug("Account ID ", account)
 			os.Setenv("AWS_ACCOUNT_ID", account)
 
 			return nil
 		},
 		Action: func(c *cli.Context) error {
-			fmt.Println("Inspecting...")
+			console.Info("Inspecting...")
 
 			var projectPath = "project.json"
 			if c.String("project") != "" {
@@ -66,9 +70,8 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 			config, err := helpers.LoadProject(projectPath)
 
 			if err != nil {
-				fmt.Println("Error: Could not load project configuration")
-				fmt.Println(err.Error())
-				os.Exit(1)
+				console.Error("Could not load project configuration")
+				console.Fatal(err.Error())
 			}
 
 			verbose := c.Bool("verbose")

@@ -27,6 +27,11 @@ var globalFlags = []cli.Flag{
 		EnvVars: []string{"AWS_SECRET_ACCESS_KEY"},
 	},
 	&cli.StringFlag{
+		Name:    "aws-account-id",
+		Usage:   "AWS account id",
+		EnvVars: []string{"AWS_ACCOUNT_ID"},
+	},
+	&cli.StringFlag{
 		Name:    "aws-region",
 		Usage:   "AWS region",
 		EnvVars: []string{"AWS_REGION"},
@@ -61,6 +66,14 @@ var globalFlags = []cli.Flag{
 	&cli.BoolFlag{
 		Name:  "verbose",
 		Usage: "Output extra information",
+	},
+	&cli.BoolFlag{
+		Name:  "no-color",
+		Usage: "Disable color in output",
+	},
+	&cli.BoolFlag{
+		Name:  "debug",
+		Usage: "Output debug information",
 	},
 }
 

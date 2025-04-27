@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/pkg/types"
 	lambdaTypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/urfave/cli/v2"
@@ -16,7 +17,7 @@ func ApplyDefaults[T any](target *T, defaults T) error {
 	defaultVal := reflect.ValueOf(defaults)
 
 	if targetVal.Type() != defaultVal.Type() {
-		fmt.Printf("Target type: %s, defaults type: %s\n", targetVal.Type(), defaultVal.Type())
+		console.Debugf("Target type: %s, defaults type: %s\n", targetVal.Type(), defaultVal.Type())
 		return fmt.Errorf("target and defaults must be the same type")
 	}
 
@@ -25,7 +26,7 @@ func ApplyDefaults[T any](target *T, defaults T) error {
 
 		// Only apply to exported fields
 		if !targetVal.Field(i).CanSet() {
-			fmt.Println("cannot set")
+			console.Debug("Cannot set")
 			continue
 		}
 
@@ -73,16 +74,16 @@ func ReadProjectData(filepath string) (types.Project, error) {
 
 	file, err := os.Open(filepath)
 	if err != nil {
-		fmt.Println("Failed to read project config")
-		fmt.Println(err.Error())
+		console.Error("Failed to read project config")
+		console.Error(err.Error())
 		return project, err
 	}
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&project); err != nil {
-		fmt.Println("Failed to decode project config")
-		fmt.Println(err.Error())
+		console.Error("Failed to decode project config")
+		console.Error(err.Error())
 		return project, err
 	}
 
@@ -94,16 +95,16 @@ func ReadFunctionConfig(filepath string) (types.LambdaData, error) {
 
 	file, err := os.Open(filepath)
 	if err != nil {
-		fmt.Println("Failed to read function config")
-		fmt.Println(err.Error())
+		console.Error("Failed to read function config")
+		console.Error(err.Error())
 		return functionData, err
 	}
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&functionData); err != nil {
-		fmt.Println("Failed to decode function config")
-		fmt.Println(err.Error())
+		console.Error("Failed to decode function config")
+		console.Error(err.Error())
 		return functionData, err
 	}
 
@@ -120,7 +121,7 @@ func ReadFunctionConfigs(stages *[]types.Stage) ([]types.LambdaData, error) {
 			data, err := ReadFunctionConfig(stage.ConfigFile)
 
 			if err != nil {
-				fmt.Println("Failed to read lambda config")
+				console.Error("Failed to read lambda config")
 				return configs, err
 			}
 			stage.Functions = append(stage.Functions, data)
@@ -161,16 +162,16 @@ func readS3Config(filepath string) (types.S3Config, error) {
 
 	file, err := os.Open(filepath)
 	if err != nil {
-		fmt.Println("Failed to read s3 config")
-		fmt.Println(err.Error())
+		console.Error("Failed to read s3 config")
+		console.Error(err.Error())
 		return config, err
 	}
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&config); err != nil {
-		fmt.Println("Failed to decode s3 config")
-		fmt.Println(err.Error())
+		console.Error("Failed to decode s3 config")
+		console.Error(err.Error())
 		return config, err
 	}
 
@@ -207,16 +208,16 @@ func readApiGatewayConfig(filepath string) (types.ApiGatewayConfig, error) {
 
 	file, err := os.Open(filepath)
 	if err != nil {
-		fmt.Println("Failed to read API gateway config")
-		fmt.Println(err.Error())
+		console.Error("Failed to read API gateway config")
+		console.Error(err.Error())
 		return config, err
 	}
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&config); err != nil {
-		fmt.Println("Failed to decode API gateway config")
-		fmt.Println(err.Error())
+		console.Error("Failed to decode API gateway config")
+		console.Error(err.Error())
 		return config, err
 	}
 
