@@ -18,7 +18,7 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 		Usage: "Inspect project configurations",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:  "verbose",
+				Name:  "full",
 				Usage: "Output all information for resources",
 			},
 			&cli.StringFlag{
@@ -73,7 +73,7 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 				console.Fatal(err.Error())
 			}
 
-			verbose := c.Bool("verbose")
+			verbose := c.Bool("full")
 
 			stageTypesMap := make(map[string]bool)
 			if c.String("stage-types") != "" {
