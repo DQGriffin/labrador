@@ -33,13 +33,19 @@ func deployLambdaStage(stage *types.Stage, existingLambdas map[string]lambdaType
 	for _, fnConfig := range stage.Functions {
 		for _, fn := range fnConfig.Functions {
 			if _, exists := existingLambdas[fn.Name]; exists {
-				if !onlyCreate {
-					aws.UpdateLambda(fn)
+				if onlyCreate {
+					console.Debugf("Skipping updating lambda %s because --only-create is set", fn.Name)
+					continue
 				}
+
+				aws.UpdateLambda(fn)
 			} else {
-				if !onlyUpdate {
-					aws.CreateLambda(fn)
+				if onlyUpdate {
+					console.Debugf("Skipping creating lambda %s because --only-update is set", fn.Name)
+					continue
 				}
+
+				aws.CreateLambda(fn)
 			}
 		}
 	}
@@ -52,11 +58,15 @@ func deployApiGatewayStage(stage *types.Stage, onlyCreate bool, onlyUpdate bool)
 
 	for _, gatewayConfig := range stage.Gateways {
 		for _, gateway := range gatewayConfig.Gateways {
-			if !onlyUpdate {
-				err := aws.CreateApiGateway(&gateway)
-				if err != nil {
-					fmt.Println(err.Error())
-				}
+
+			if onlyUpdate {
+				console.Debugf("Skipping creating api gateway %s because --only-update is set", *gateway.Name)
+				continue
+			}
+
+			err := aws.CreateApiGateway(&gateway)
+			if err != nil {
+				fmt.Println(err.Error())
 			}
 		}
 	}
