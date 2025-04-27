@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
+	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/internal/commands"
 	"github.com/DQGriffin/labrador/internal/helpers"
 	"github.com/DQGriffin/labrador/internal/services/aws"
@@ -18,12 +18,16 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 		Usage: "Inspect project configurations",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:  "verbose",
+				Name:  "full",
 				Usage: "Output all information for resources",
 			},
 			&cli.StringFlag{
+				Name:  "output",
+				Usage: "Set output mode (plain, tree)",
+			},
+			&cli.StringFlag{
 				Name:  "stage-types",
-				Usage: "Restrict output to specific stage types",
+				Usage: "Comma-separated list of stage types to include (e.g., 'lambda,api')",
 			},
 		},
 		Before: func(c *cli.Context) error {
@@ -32,8 +36,11 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 			}
 			utils.ReadCliArgs(c)
 
+			console.SetColorEnabled(!c.Bool("no-color"))
+			console.SetDebugOutputEnabled(c.Bool("debug"))
+
 			if c.String("aws-account-id") != "" {
-				fmt.Println("Using AWS account ID provided in flag")
+				console.Debug("Using AWS account ID provided in flag")
 				os.Setenv("AWS_ACCOUNT_ID", c.String("aws-account_id"))
 				return nil
 			}
@@ -41,33 +48,32 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 			account, accErr := aws.GetAccountID()
 			if accErr != nil {
 				// Let's not stop execution here
-				fmt.Println("Error", accErr.Error())
+				console.Error(accErr.Error())
 			}
 
-			fmt.Println("Account ID", account)
+			console.Debug("Account ID ", account)
 			os.Setenv("AWS_ACCOUNT_ID", account)
 
 			return nil
 		},
 		Action: func(c *cli.Context) error {
-			fmt.Println("Inspecting...")
+			console.Debug("Inspecting...")
 
 			var projectPath = "project.json"
 			if c.String("project") != "" {
 				projectPath = c.String("project")
 			} else {
-				fmt.Println("Project config file path not specified. Assuming project.json")
+				console.Info("Project config file path not specified. Assuming project.json")
 			}
 
 			config, err := helpers.LoadProject(projectPath)
 
 			if err != nil {
-				fmt.Println("Error: Could not load project configuration")
-				fmt.Println(err.Error())
-				os.Exit(1)
+				console.Error("Could not load project configuration")
+				console.Fatal(err.Error())
 			}
 
-			verbose := c.Bool("verbose")
+			verbose := c.Bool("full")
 
 			stageTypesMap := make(map[string]bool)
 			if c.String("stage-types") != "" {
@@ -78,7 +84,12 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 				}
 			}
 
-			commands.HandleInspectCommand(&config, "plain", &stageTypesMap, verbose)
+			var outputMode = "tree"
+			if c.String("output") != "" {
+				outputMode = c.String("output")
+			}
+
+			commands.HandleInspectCommand(&config, outputMode, &stageTypesMap, verbose)
 
 			return nil
 		},

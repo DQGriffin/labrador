@@ -2,8 +2,8 @@ package commands
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/internal/services/aws"
 	internalTypes "github.com/DQGriffin/labrador/internal/types"
 	"github.com/DQGriffin/labrador/pkg/types"
@@ -22,7 +22,7 @@ func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, for
 				handleApiGatewayStage(&stage, isDryRun, force)
 			}
 		} else {
-			fmt.Println("Skipping stage", stage.Name)
+			console.Info("Skipping stage", stage.Name)
 		}
 	}
 
@@ -30,7 +30,7 @@ func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, for
 }
 
 func handleLambdaStage(stage *types.Stage, isDryRun bool, force bool) {
-	fmt.Println("Stage", stage.Name)
+	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
 	deletableLambdas, skippedLambdas := getDeletableLambdas(&stage.Functions, stage.Name)
 
 	if isDryRun {
@@ -41,7 +41,7 @@ func handleLambdaStage(stage *types.Stage, isDryRun bool, force bool) {
 }
 
 func handleS3Stage(stage *types.Stage, isDryRun bool, force bool) {
-	fmt.Println("Stage", stage.Name)
+	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
 	deletableBuckets, skippedBuckets := getDeletableBuckets(&stage.Buckets, stage.Name)
 
 	if isDryRun {
@@ -52,7 +52,7 @@ func handleS3Stage(stage *types.Stage, isDryRun bool, force bool) {
 }
 
 func handleApiGatewayStage(stage *types.Stage, isDryRun bool, force bool) {
-	fmt.Println("Stage", stage.Name)
+	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
 	deletableGateways, skippedGateways := getDeletableApiGateways(&stage.Gateways, stage.Name)
 
 	if isDryRun {
@@ -63,20 +63,19 @@ func handleApiGatewayStage(stage *types.Stage, isDryRun bool, force bool) {
 }
 
 func handleDryRun(forDeletion *[]internalTypes.UniversalResourceDefinition, skipped *[]internalTypes.UniversalResourceDefinition) {
-	fmt.Println("Would delete:")
+	console.Info("Would delete:")
 	for _, resource := range *forDeletion {
-		fmt.Printf("- %s\n", resource.Name)
+		console.Infof("- %s", resource.Name)
 	}
-	fmt.Println("Would skip:")
+	console.Info("Would skip:")
 	for _, resource := range *skipped {
-		fmt.Printf("- %s\n", resource.Name)
+		console.Infof("- %s", resource.Name)
 	}
-	fmt.Println()
+	console.Info()
 }
 
 func isStageMarkedForDeletion(stage *types.Stage, stageTypesMap *map[string]bool, env string) bool {
 	if len(*stageTypesMap) == 0 {
-		fmt.Println("Stage types map is empty. Returning true")
 		return true
 	}
 
@@ -121,6 +120,7 @@ func getDeletableBuckets(config *[]types.S3Config, stageName string) ([]internal
 					StageName:    stageName,
 					Arn:          "",
 					ResourceType: "s3",
+					Region:       *bucket.Region,
 				})
 			} else {
 				skippedBuckets = append(skippedBuckets, internalTypes.UniversalResourceDefinition{
@@ -128,6 +128,7 @@ func getDeletableBuckets(config *[]types.S3Config, stageName string) ([]internal
 					StageName:    stageName,
 					Arn:          "",
 					ResourceType: "s3",
+					Region:       *bucket.Region,
 				})
 			}
 		}
@@ -170,7 +171,7 @@ func destroyResources(resources *[]internalTypes.UniversalResourceDefinition, fo
 		if resource.ResourceType == "lambda" {
 			aws.DeleteLambda(resource.Name)
 		} else if resource.ResourceType == "s3" {
-			aws.DeleteBucket(resource.Name, force)
+			aws.DeleteBucket(resource.Name, resource.Region, force)
 		} else if resource.ResourceType == "api" {
 
 			ctx := context.TODO()
@@ -178,7 +179,7 @@ func destroyResources(resources *[]internalTypes.UniversalResourceDefinition, fo
 			client := apigatewayv2.NewFromConfig(cfg)
 			err := aws.DestroyApiGateway(ctx, *client, resource.Name)
 			if err != nil {
-				fmt.Println(err.Error())
+				console.Error(err.Error())
 			}
 		}
 	}

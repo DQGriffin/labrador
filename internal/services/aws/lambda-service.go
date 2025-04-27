@@ -3,10 +3,10 @@ package aws
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
+	"github.com/DQGriffin/labrador/internal/cli/console"
 	internalTypes "github.com/DQGriffin/labrador/internal/types"
 	"github.com/DQGriffin/labrador/pkg/types"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -36,7 +36,7 @@ func ListLambdas() (map[string]lambdaTypes.FunctionConfiguration, error) {
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(context.TODO())
 		if err != nil {
-			log.Fatal(err)
+			console.Fatal(err)
 		}
 		for _, fn := range page.Functions {
 			m[*fn.FunctionName] = lambdaTypes.FunctionConfiguration{}
@@ -49,16 +49,16 @@ func ListLambdas() (map[string]lambdaTypes.FunctionConfiguration, error) {
 // Should refactor this in the future. Currently we're creating a new client every time
 // a function is created or update. Ideally we would reuse the client
 func CreateLambda(lambdaConfig types.LambdaConfig) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(*lambdaConfig.Region))
 	if err != nil {
-		log.Fatalf("Unable to load AWS config: %v", err)
+		console.Fatalf("Unable to load AWS config: %v", err)
 	}
 
 	client := lambda.NewFromConfig(cfg)
 
 	zipData, err := os.ReadFile(*lambdaConfig.Code)
 	if err != nil {
-		log.Fatalf("Failed to read scaffold zip: %v", err)
+		console.Fatalf("Failed to read scaffold zip: %v", err)
 	}
 
 	_, getErr := client.GetFunction(context.TODO(), &lambda.GetFunctionInput{
@@ -66,12 +66,12 @@ func CreateLambda(lambdaConfig types.LambdaConfig) {
 	})
 
 	if getErr == nil {
-		log.Printf("Lambda %q already exists. Skipping.\n", lambdaConfig.Name)
+		console.Infof("Lambda %q already exists. Skipping.", lambdaConfig.Name)
 		// continue
 		return
 	}
 
-	log.Printf("Creating Lambda %q...\n", lambdaConfig.Name)
+	console.Infof("Creating Lambda %q...", lambdaConfig.Name)
 	_, err = client.CreateFunction(context.TODO(), &lambda.CreateFunctionInput{
 		FunctionName: aws.String(lambdaConfig.Name),
 		Description:  aws.String(*lambdaConfig.Description),
@@ -91,30 +91,32 @@ func CreateLambda(lambdaConfig types.LambdaConfig) {
 	})
 
 	if err != nil {
-		log.Printf("Failed to create function %q: %v\n", lambdaConfig.Name, err)
+		console.Errorf("Failed to create function %q: %v", lambdaConfig.Name, err)
 		return
 	}
 
-	log.Printf("Created Lambda %q\n", lambdaConfig.Name)
+	console.Infof("Created Lambda %q", lambdaConfig.Name)
 }
 
 func UpdateLambda(lambdaConfig types.LambdaConfig) {
+	console.Infof("Updating lambda %q", lambdaConfig.Name)
 	updateLambdaCode(lambdaConfig)
 	time.Sleep(5 * time.Second)
 	UpdateLambdaConfiguration(lambdaConfig)
+	console.Infof("Finished updating lambda %q", lambdaConfig.Name)
 }
 
 func updateLambdaCode(lambdaConfig types.LambdaConfig) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(*lambdaConfig.Region))
 	if err != nil {
-		log.Fatalf("Unable to load AWS config: %v", err)
+		console.Fatalf("Unable to load AWS config: %v", err)
 	}
 
 	client := lambda.NewFromConfig(cfg)
 
 	zipData, err := os.ReadFile(*lambdaConfig.Code)
 	if err != nil {
-		log.Fatalf("Failed to read scaffold zip: %v", err)
+		console.Fatalf("Failed to read zip: %v", err)
 	}
 
 	_, updateErr := client.UpdateFunctionCode(context.TODO(), &lambda.UpdateFunctionCodeInput{
@@ -122,14 +124,14 @@ func updateLambdaCode(lambdaConfig types.LambdaConfig) {
 		ZipFile:      zipData,
 	})
 	if updateErr != nil {
-		log.Fatalf("Failed to update function code for %s: %v", lambdaConfig.Name, err)
+		console.Errorf("Failed to update function code for %s: %v", lambdaConfig.Name, err)
 	}
 }
 
 func UpdateLambdaConfiguration(lambdaConfig types.LambdaConfig) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(*lambdaConfig.Region))
 	if err != nil {
-		log.Fatalf("Unable to load AWS config: %v", err)
+		console.Fatalf("Unable to load AWS config: %v", err)
 	}
 
 	client := lambda.NewFromConfig(cfg)
@@ -146,7 +148,7 @@ func UpdateLambdaConfiguration(lambdaConfig types.LambdaConfig) {
 		},
 	})
 	if err != nil {
-		log.Fatalf("Failed to update function config: %v", err)
+		console.Errorf("Failed to update function config: %v", err)
 	}
 }
 
@@ -167,9 +169,10 @@ func GetLambda(ctx context.Context, cfg aws.Config, lambdaName string) (lambdaTy
 }
 
 func DeleteLambda(lambdaName string) {
+	console.Infof("Deleting lambda: %s", lambdaName)
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
 	if err != nil {
-		log.Fatalf("Unable to load AWS config: %v", err)
+		console.Fatalf("Unable to load AWS config: %v", err)
 	}
 
 	client := lambda.NewFromConfig(cfg)
@@ -178,10 +181,10 @@ func DeleteLambda(lambdaName string) {
 		FunctionName: aws.String(lambdaName),
 	})
 	if deleteErr != nil {
-		fmt.Printf("failed to delete Lambda %s: %w", lambdaName, err)
+		console.Errorf("failed to delete Lambda %s: %s", lambdaName, deleteErr.Error())
 	}
 
-	fmt.Printf("Deleted Lambda: %s\n", lambdaName)
+	console.Infof("Deleted Lambda: %s", lambdaName)
 }
 
 func AddPermissionToLambda(ctx context.Context, cfg aws.Config, permission internalTypes.LambdaPermission) error {
@@ -198,6 +201,6 @@ func AddPermissionToLambda(ctx context.Context, cfg aws.Config, permission inter
 		return fmt.Errorf("failed to add permission to %s: %w", permission.FunctionName, err)
 	}
 
-	fmt.Printf("Added permission to lambda %s\n", permission.FunctionName)
+	console.Infof("Added permission to lambda %s", permission.FunctionName)
 	return nil
 }

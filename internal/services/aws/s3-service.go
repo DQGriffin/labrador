@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/pkg/types"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -33,6 +34,7 @@ func ListBuckets(ctx context.Context, client *s3.Client) (map[string]bool, error
 }
 
 func CreateBucket(ctx context.Context, cfg aws.Config, client s3.Client, bucket types.S3Settings) error {
+	console.Infof("Creating bucket: %s", *bucket.Name)
 	input := &s3.CreateBucketInput{
 		Bucket: aws.String(*bucket.Name),
 	}
@@ -54,8 +56,7 @@ func CreateBucket(ctx context.Context, cfg aws.Config, client s3.Client, bucket 
 		return settingsErr
 	}
 
-	fmt.Printf("Created bucket: %s\n", *bucket.Name)
-
+	console.Infof("Created bucket: %s", *bucket.Name)
 	return nil
 }
 
@@ -65,13 +66,14 @@ func UpdateBucket(ctx context.Context, client s3.Client, bucket types.S3Settings
 		return settingsErr
 	}
 
-	fmt.Printf("Updated bucket: %s\n", *bucket.Name)
+	console.Infof("Updated bucket: %s", *bucket.Name)
 
 	return nil
 }
 
-func DeleteBucket(bucketName string, force bool) error {
-	ctx, cfg, err := GetConfig("us-east-2")
+func DeleteBucket(bucketName string, bucketRegion string, force bool) error {
+	console.Infof("Deleting bucket: %s", bucketName)
+	ctx, cfg, err := GetConfig(bucketRegion)
 
 	if err != nil {
 		return err
@@ -81,7 +83,7 @@ func DeleteBucket(bucketName string, force bool) error {
 
 	if force {
 		// Region is hard coded for now. Need to refactor
-		EmptyBucket(ctx, bucketName, "us-east-2")
+		EmptyBucket(ctx, bucketName, bucketRegion)
 	}
 
 	_, deleteErr := client.DeleteBucket(ctx, &s3.DeleteBucketInput{
@@ -92,7 +94,7 @@ func DeleteBucket(bucketName string, force bool) error {
 		return fmt.Errorf("failed to delete bucket %s: %w", bucketName, deleteErr)
 	}
 
-	fmt.Printf("Deleted bucket: %s\n", bucketName)
+	console.Infof("Deleted bucket: %s", bucketName)
 	return nil
 }
 
@@ -137,10 +139,10 @@ func EmptyBucket(ctx context.Context, bucketName, region string) error {
 			return fmt.Errorf("failed to delete objects: %w", err)
 		}
 
-		fmt.Printf("Deleted %d objects from %s\n", len(objectsToDelete), bucketName)
+		console.Infof("Deleted %d objects from %s\n", len(objectsToDelete), bucketName)
 	}
 
-	fmt.Printf("Bucket %s is now empty\n", bucketName)
+	console.Infof("Bucket %s is now empty\n", bucketName)
 	return nil
 }
 

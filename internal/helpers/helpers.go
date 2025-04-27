@@ -1,9 +1,9 @@
 package helpers
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/internal/validation"
 	"github.com/DQGriffin/labrador/pkg/interpolation"
 	"github.com/DQGriffin/labrador/pkg/types"
@@ -57,16 +57,15 @@ func LoadProject(filepath string) (types.LabradorConfig, error) {
 
 	project, err := utils.ReadProjectData(filepath)
 	if err != nil {
-		fmt.Printf("Unable to read project config from %s\n", filepath)
-		fmt.Println(err.Error())
-		os.Exit(1)
+		console.Errorf("Unable to read project config from %s\n", filepath)
+		console.Fatal(err.Error())
 	}
 
 	errs := validation.ValidateProject(project)
 	if len(errs) > 0 {
-		fmt.Println("Errors validating project config")
+		console.Error("Errors validating project config")
 		for _, err := range errs {
-			fmt.Println(err)
+			console.Info(err)
 		}
 		os.Exit(1)
 	}
@@ -78,8 +77,7 @@ func LoadProject(filepath string) (types.LabradorConfig, error) {
 	functionData, readErr := utils.ReadFunctionConfigs(&project.Stages)
 
 	if readErr != nil {
-		fmt.Println(readErr)
-		os.Exit(1)
+		console.Fatal(readErr)
 	}
 
 	for i := range functionData {
@@ -97,8 +95,7 @@ func LoadProject(filepath string) (types.LabradorConfig, error) {
 	s3Configs, s3Err := utils.ReadS3Configs(&project.Stages)
 
 	if s3Err != nil {
-		fmt.Println(s3Err)
-		os.Exit(1)
+		console.Fatal(s3Err)
 	}
 
 	for i := range s3Configs {
@@ -112,8 +109,7 @@ func LoadProject(filepath string) (types.LabradorConfig, error) {
 
 	gatewayConfigs, gatewayErr := utils.ReadApiGatewayConfigs(&project.Stages)
 	if gatewayErr != nil {
-		fmt.Println(gatewayErr)
-		os.Exit(1)
+		console.Fatal(gatewayErr)
 	}
 
 	for i := range gatewayConfigs {

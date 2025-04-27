@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
 	"strings"
 
+	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/internal/commands"
 	"github.com/DQGriffin/labrador/internal/helpers"
 	"github.com/DQGriffin/labrador/pkg/utils"
@@ -32,8 +31,14 @@ func DestroyCommand(flags []cli.Flag) *cli.Command {
 				EnvVars: []string{"STAGE_TYPES"},
 			},
 		},
+		Before: func(c *cli.Context) error {
+			console.SetColorEnabled(!c.Bool("no-color"))
+			console.SetDebugOutputEnabled(c.Bool("debug"))
+
+			return nil
+		},
 		Action: func(c *cli.Context) error {
-			fmt.Println("Destroy")
+			console.Debug("Destroy")
 
 			if c.String("env-file") != "" {
 				helpers.LoadEnvFile(c.String("env-file"))
@@ -44,7 +49,7 @@ func DestroyCommand(flags []cli.Flag) *cli.Command {
 			if c.String("project") != "" {
 				projectPath = c.String("project")
 			} else {
-				fmt.Println("Project config file path not specified. Assuming project.json")
+				console.Info("Project config file path not specified. Assuming project.json")
 			}
 
 			var isDryRun = c.Bool("dry-run")
@@ -52,9 +57,8 @@ func DestroyCommand(flags []cli.Flag) *cli.Command {
 			config, err := helpers.LoadProject(projectPath)
 
 			if err != nil {
-				fmt.Println("Error: Could not load project configuration")
-				fmt.Println(err.Error())
-				os.Exit(1)
+				console.Error("Could not load project configuration")
+				console.Fatal(err.Error())
 			}
 
 			var env = config.Project.Environment

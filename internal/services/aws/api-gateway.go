@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/DQGriffin/labrador/internal/cli/console"
 	internalTypes "github.com/DQGriffin/labrador/internal/types"
 	"github.com/DQGriffin/labrador/pkg/types"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -29,13 +30,13 @@ func CreateApiGateway(gateway *types.ApiGatewaySettings) error {
 		return fmt.Errorf("failed to create API: %w", err)
 	}
 	apiID := *apiOut.ApiId
-	fmt.Println("Created API:", apiID)
+	console.Info("Created API: ", apiID)
 
 	m := make(map[string]string)
 	settingsErr := setApiGatewaySettings(gateway, &m, ctx, *client, apiID)
 
 	if settingsErr != nil {
-		fmt.Println(settingsErr.Error())
+		console.Error(settingsErr.Error())
 	}
 
 	return nil
@@ -108,7 +109,7 @@ func addIntegrations(integrations *[]types.ApiGatewayIntegration, region string,
 
 		AddPermissionToLambda(ctx, cfg, *permission)
 
-		fmt.Println("Created integration:", integrationID)
+		console.Info("Created integration: ", integrationID)
 	}
 
 	return integrationRefMap, nil
@@ -132,7 +133,7 @@ func addRoutes(routes *[]types.ApiGatewayRoute, refMap *map[string]string, ctx c
 			return fmt.Errorf("failed to create route: %w", err)
 		}
 
-		fmt.Println("Created route GET /users")
+		console.Info("Created route GET /users")
 	}
 
 	return nil
@@ -151,7 +152,7 @@ func createStages(stages *[]types.ApiGatewayStage, ctx context.Context, client a
 			return fmt.Errorf("failed to create stage %q: %w", stage.Name, err)
 		}
 
-		fmt.Printf("Created stage: %s\n", stage.Name)
+		console.Infof("Created stage: %s", stage.Name)
 	}
 	return nil
 }
@@ -172,7 +173,7 @@ func GetApiIDByName(ctx context.Context, client *apigatewayv2.Client, targetName
 }
 
 func DestroyApiGateway(ctx context.Context, client apigatewayv2.Client, gatewayName string) error {
-	fmt.Printf("Deleting API Gateway %s\n", gatewayName)
+	console.Infof("Deleting API Gateway: %s", gatewayName)
 	apiId, err := GetApiIDByName(ctx, &client, gatewayName)
 	if err != nil {
 		return err
@@ -186,5 +187,6 @@ func DestroyApiGateway(ctx context.Context, client apigatewayv2.Client, gatewayN
 		return deleteErr
 	}
 
+	console.Infof("Deleted API Gateway: %s", gatewayName)
 	return nil
 }
