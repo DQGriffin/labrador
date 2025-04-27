@@ -22,6 +22,25 @@ func SetDebugOutputEnabled(value bool) {
 	isDebugOutputEnabled = value
 }
 
+func Heading(args ...interface{}) {
+	text := fmt.Sprint(args...)
+	if isColorEnabled {
+		fmt.Println(styles.Heading.Render(text))
+	} else {
+		fmt.Println(text)
+	}
+}
+
+func Headingf(format string, args ...interface{}) {
+	output := fmt.Sprintf(format, args...)
+	if isColorEnabled {
+		fmt.Println()
+		fmt.Println(styles.Heading.Render(output))
+	} else {
+		fmt.Println(output)
+	}
+}
+
 func Debug(args ...interface{}) {
 	if !isDebugOutputEnabled {
 		return

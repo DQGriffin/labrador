@@ -30,7 +30,7 @@ func CreateApiGateway(gateway *types.ApiGatewaySettings) error {
 		return fmt.Errorf("failed to create API: %w", err)
 	}
 	apiID := *apiOut.ApiId
-	console.Info("Created API:", apiID)
+	console.Info("Created API: ", apiID)
 
 	m := make(map[string]string)
 	settingsErr := setApiGatewaySettings(gateway, &m, ctx, *client, apiID)
@@ -109,7 +109,7 @@ func addIntegrations(integrations *[]types.ApiGatewayIntegration, region string,
 
 		AddPermissionToLambda(ctx, cfg, *permission)
 
-		console.Info("Created integration:", integrationID)
+		console.Info("Created integration: ", integrationID)
 	}
 
 	return integrationRefMap, nil
@@ -152,7 +152,7 @@ func createStages(stages *[]types.ApiGatewayStage, ctx context.Context, client a
 			return fmt.Errorf("failed to create stage %q: %w", stage.Name, err)
 		}
 
-		console.Infof("Created stage: %s\n", stage.Name)
+		console.Infof("Created stage: %s", stage.Name)
 	}
 	return nil
 }
@@ -173,7 +173,7 @@ func GetApiIDByName(ctx context.Context, client *apigatewayv2.Client, targetName
 }
 
 func DestroyApiGateway(ctx context.Context, client apigatewayv2.Client, gatewayName string) error {
-	console.Infof("Deleting API Gateway %s\n", gatewayName)
+	console.Infof("Deleting API Gateway: %s", gatewayName)
 	apiId, err := GetApiIDByName(ctx, &client, gatewayName)
 	if err != nil {
 		return err
@@ -187,5 +187,6 @@ func DestroyApiGateway(ctx context.Context, client apigatewayv2.Client, gatewayN
 		return deleteErr
 	}
 
+	console.Infof("Deleted API Gateway: %s", gatewayName)
 	return nil
 }

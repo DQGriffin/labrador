@@ -30,7 +30,7 @@ func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, for
 }
 
 func handleLambdaStage(stage *types.Stage, isDryRun bool, force bool) {
-	console.Info("Stage", stage.Name)
+	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
 	deletableLambdas, skippedLambdas := getDeletableLambdas(&stage.Functions, stage.Name)
 
 	if isDryRun {
@@ -41,7 +41,7 @@ func handleLambdaStage(stage *types.Stage, isDryRun bool, force bool) {
 }
 
 func handleS3Stage(stage *types.Stage, isDryRun bool, force bool) {
-	console.Info("Stage", stage.Name)
+	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
 	deletableBuckets, skippedBuckets := getDeletableBuckets(&stage.Buckets, stage.Name)
 
 	if isDryRun {
@@ -52,7 +52,7 @@ func handleS3Stage(stage *types.Stage, isDryRun bool, force bool) {
 }
 
 func handleApiGatewayStage(stage *types.Stage, isDryRun bool, force bool) {
-	console.Info("Stage", stage.Name)
+	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
 	deletableGateways, skippedGateways := getDeletableApiGateways(&stage.Gateways, stage.Name)
 
 	if isDryRun {
@@ -76,7 +76,6 @@ func handleDryRun(forDeletion *[]internalTypes.UniversalResourceDefinition, skip
 
 func isStageMarkedForDeletion(stage *types.Stage, stageTypesMap *map[string]bool, env string) bool {
 	if len(*stageTypesMap) == 0 {
-		console.Info("Stage types map is empty. Returning true")
 		return true
 	}
 

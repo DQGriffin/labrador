@@ -14,37 +14,41 @@ func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]
 	for _, stage := range config.Project.Stages {
 
 		if helpers.IsStageActionable(&stage, stageTypesMap) {
-			deployLambdaStage(&stage, existingLambdas, onlyCreate, onlyUpdate)
-			deployS3Stage(&stage, existingBuckets, onlyCreate, onlyUpdate)
-			deployApiGatewayStage(&stage, onlyCreate, onlyUpdate)
-		}
-	}
-}
-
-func deployLambdaStage(stage *types.Stage, existingLambdas map[string]lambdaTypes.FunctionConfiguration, onlyCreate bool, onlyUpdate bool) {
-	console.Infof("Deploying Stage: %s", stage.Name)
-	console.Infof("Type: %s", stage.Type)
-
-	for _, fnConfig := range stage.Functions {
-		for _, fn := range fnConfig.Functions {
-			if _, exists := existingLambdas[fn.Name]; exists {
-				if !onlyCreate {
-					console.Info("updating function", fn.Name)
-					aws.UpdateLambda(fn)
-				}
+			if stage.Type == "lambda" {
+				deployLambdaStage(&stage, existingLambdas, onlyCreate, onlyUpdate)
+			} else if stage.Type == "s3" {
+				deployS3Stage(&stage, existingBuckets, onlyCreate, onlyUpdate)
+			} else if stage.Type == "api" {
+				deployApiGatewayStage(&stage, onlyCreate, onlyUpdate)
 			} else {
-				if !onlyUpdate {
-					console.Info("creating function", fn.Name)
-					aws.CreateLambda(fn)
-				}
+				console.Warn("unknown stage type: ", stage.Type)
 			}
 		}
 	}
 }
 
+func deployLambdaStage(stage *types.Stage, existingLambdas map[string]lambdaTypes.FunctionConfiguration, onlyCreate bool, onlyUpdate bool) {
+	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
+
+	for _, fnConfig := range stage.Functions {
+		for _, fn := range fnConfig.Functions {
+			if _, exists := existingLambdas[fn.Name]; exists {
+				if !onlyCreate {
+					aws.UpdateLambda(fn)
+				}
+			} else {
+				if !onlyUpdate {
+					aws.CreateLambda(fn)
+				}
+			}
+		}
+	}
+
+	console.Info()
+}
+
 func deployApiGatewayStage(stage *types.Stage, onlyCreate bool, onlyUpdate bool) {
-	console.Infof("Deploying Stage: %s\n", stage.Name)
-	console.Infof("Type: %s\n", stage.Type)
+	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
 
 	for _, gatewayConfig := range stage.Gateways {
 		for _, gateway := range gatewayConfig.Gateways {
@@ -56,11 +60,12 @@ func deployApiGatewayStage(stage *types.Stage, onlyCreate bool, onlyUpdate bool)
 			}
 		}
 	}
+
+	console.Info()
 }
 
 func deployS3Stage(stage *types.Stage, existingBuckets map[string]bool, onlyCreate bool, onlyUpdate bool) error {
-	console.Infof("Deploying Stage: %s\n", stage.Name)
-	console.Infof("Type: %s\n", stage.Type)
+	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
 
 	for _, bucketConfig := range stage.Buckets {
 		for _, bucket := range bucketConfig.Buckets {
@@ -88,5 +93,6 @@ func deployS3Stage(stage *types.Stage, existingBuckets map[string]bool, onlyCrea
 		}
 	}
 
+	console.Info()
 	return nil
 }

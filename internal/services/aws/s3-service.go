@@ -34,6 +34,7 @@ func ListBuckets(ctx context.Context, client *s3.Client) (map[string]bool, error
 }
 
 func CreateBucket(ctx context.Context, cfg aws.Config, client s3.Client, bucket types.S3Settings) error {
+	console.Infof("Creating bucket: %s", *bucket.Name)
 	input := &s3.CreateBucketInput{
 		Bucket: aws.String(*bucket.Name),
 	}
@@ -56,7 +57,6 @@ func CreateBucket(ctx context.Context, cfg aws.Config, client s3.Client, bucket 
 	}
 
 	console.Infof("Created bucket: %s", *bucket.Name)
-
 	return nil
 }
 
@@ -73,6 +73,7 @@ func UpdateBucket(ctx context.Context, client s3.Client, bucket types.S3Settings
 
 func DeleteBucket(bucketName string, force bool) error {
 	console.Debug("DeleteBucket() currently hardcodes region to us-east-2. Will need to be refactored")
+	console.Infof("Deleting bucket: %s", bucketName)
 	ctx, cfg, err := GetConfig("us-east-2")
 
 	if err != nil {
@@ -94,7 +95,7 @@ func DeleteBucket(bucketName string, force bool) error {
 		return fmt.Errorf("failed to delete bucket %s: %w", bucketName, deleteErr)
 	}
 
-	console.Infof("Deleted bucket: %s\n", bucketName)
+	console.Infof("Deleted bucket: %s", bucketName)
 	return nil
 }
 

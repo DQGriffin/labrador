@@ -17,3 +17,7 @@ var Error = lipgloss.NewStyle().Foreground(errorForeground).Background(errorBack
 
 var warnForeground = lipgloss.AdaptiveColor{Light: "232", Dark: "11"}
 var Warn = lipgloss.NewStyle().Foreground(warnForeground)
+
+var headingForeground = lipgloss.AdaptiveColor{Light: "0", Dark: "0"}
+var headingBackground = lipgloss.AdaptiveColor{Light: "232", Dark: "248"}
+var Heading = lipgloss.NewStyle().Foreground(headingForeground).Background(headingBackground).Bold(true)

@@ -99,9 +99,11 @@ func CreateLambda(lambdaConfig types.LambdaConfig) {
 }
 
 func UpdateLambda(lambdaConfig types.LambdaConfig) {
+	console.Infof("Updating lambda %q", lambdaConfig.Name)
 	updateLambdaCode(lambdaConfig)
 	time.Sleep(5 * time.Second)
 	UpdateLambdaConfiguration(lambdaConfig)
+	console.Infof("Finished updating lambda %q", lambdaConfig.Name)
 }
 
 func updateLambdaCode(lambdaConfig types.LambdaConfig) {
@@ -167,6 +169,7 @@ func GetLambda(ctx context.Context, cfg aws.Config, lambdaName string) (lambdaTy
 }
 
 func DeleteLambda(lambdaName string) {
+	console.Infof("Deleting lambda: %s", lambdaName)
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
 	if err != nil {
 		console.Fatalf("Unable to load AWS config: %v", err)
