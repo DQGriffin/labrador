@@ -71,10 +71,9 @@ func UpdateBucket(ctx context.Context, client s3.Client, bucket types.S3Settings
 	return nil
 }
 
-func DeleteBucket(bucketName string, force bool) error {
-	console.Debug("DeleteBucket() currently hardcodes region to us-east-2. Will need to be refactored")
+func DeleteBucket(bucketName string, bucketRegion string, force bool) error {
 	console.Infof("Deleting bucket: %s", bucketName)
-	ctx, cfg, err := GetConfig("us-east-2")
+	ctx, cfg, err := GetConfig(bucketRegion)
 
 	if err != nil {
 		return err
@@ -84,7 +83,7 @@ func DeleteBucket(bucketName string, force bool) error {
 
 	if force {
 		// Region is hard coded for now. Need to refactor
-		EmptyBucket(ctx, bucketName, "us-east-2")
+		EmptyBucket(ctx, bucketName, bucketRegion)
 	}
 
 	_, deleteErr := client.DeleteBucket(ctx, &s3.DeleteBucketInput{

@@ -120,6 +120,7 @@ func getDeletableBuckets(config *[]types.S3Config, stageName string) ([]internal
 					StageName:    stageName,
 					Arn:          "",
 					ResourceType: "s3",
+					Region:       *bucket.Region,
 				})
 			} else {
 				skippedBuckets = append(skippedBuckets, internalTypes.UniversalResourceDefinition{
@@ -127,6 +128,7 @@ func getDeletableBuckets(config *[]types.S3Config, stageName string) ([]internal
 					StageName:    stageName,
 					Arn:          "",
 					ResourceType: "s3",
+					Region:       *bucket.Region,
 				})
 			}
 		}
@@ -169,7 +171,7 @@ func destroyResources(resources *[]internalTypes.UniversalResourceDefinition, fo
 		if resource.ResourceType == "lambda" {
 			aws.DeleteLambda(resource.Name)
 		} else if resource.ResourceType == "s3" {
-			aws.DeleteBucket(resource.Name, force)
+			aws.DeleteBucket(resource.Name, resource.Region, force)
 		} else if resource.ResourceType == "api" {
 
 			ctx := context.TODO()
