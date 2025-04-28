@@ -96,12 +96,17 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 			}
 
 			client := aws.GetClient(cfg)
-
 			existingBuckets, bucketErr := aws.ListBuckets(ctx, client)
-
 			if bucketErr != nil {
 				console.Fatal("Could not list buckets in AWS account. Check permissions ", bucketErr.Error())
 			}
+
+			existingApiGateways, gatewayErr := aws.ListApiGateways(os.Getenv("AWS_REGION"))
+			if gatewayErr != nil {
+				console.Fatal(gatewayErr.Error())
+			}
+
+			console.Debugf("Found %d API gateways in the account", len(existingApiGateways))
 
 			onlyCreate := c.Bool("only-create")
 			onlyUpdate := c.Bool("only-update")
@@ -115,7 +120,7 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 				}
 			}
 
-			commands.HandleDeployCommand(config, &stageTypesMap, existingLambdas, existingBuckets, onlyCreate, onlyUpdate)
+			commands.HandleDeployCommand(config, &stageTypesMap, existingLambdas, existingBuckets, &existingApiGateways, onlyCreate, onlyUpdate)
 
 			console.Info("Done")
 			return nil

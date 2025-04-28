@@ -10,7 +10,7 @@ import (
 	lambdaTypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 )
 
-func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]bool, existingLambdas map[string]lambdaTypes.FunctionConfiguration, existingBuckets map[string]bool, onlyCreate bool, onlyUpdate bool) {
+func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]bool, existingLambdas map[string]lambdaTypes.FunctionConfiguration, existingBuckets map[string]bool, existingApiGateways *map[string]string, onlyCreate bool, onlyUpdate bool) {
 	for _, stage := range config.Project.Stages {
 
 		if helpers.IsStageActionable(&stage, stageTypesMap) {
@@ -19,7 +19,7 @@ func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]
 			} else if stage.Type == "s3" {
 				deployS3Stage(&stage, existingBuckets, onlyCreate, onlyUpdate)
 			} else if stage.Type == "api" {
-				deployApiGatewayStage(&stage, onlyCreate, onlyUpdate)
+				deployApiGatewayStage(&stage, existingApiGateways, onlyCreate, onlyUpdate)
 			} else {
 				console.Warn("unknown stage type: ", stage.Type)
 			}
@@ -53,20 +53,33 @@ func deployLambdaStage(stage *types.Stage, existingLambdas map[string]lambdaType
 	console.Info()
 }
 
-func deployApiGatewayStage(stage *types.Stage, onlyCreate bool, onlyUpdate bool) {
+func deployApiGatewayStage(stage *types.Stage, existingApiGateways *map[string]string, onlyCreate bool, onlyUpdate bool) {
 	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
 
 	for _, gatewayConfig := range stage.Gateways {
 		for _, gateway := range gatewayConfig.Gateways {
 
-			if onlyUpdate {
-				console.Debugf("Skipping creating api gateway %s because --only-update is set", *gateway.Name)
-				continue
-			}
+			apiId := (*existingApiGateways)[*gateway.Name]
+			if apiId == "" {
+				if onlyUpdate {
+					console.Debugf("Skipping creating api gateway %s because --only-update is set", *gateway.Name)
+					continue
+				}
 
-			err := aws.CreateApiGateway(&gateway)
-			if err != nil {
-				fmt.Println(err.Error())
+				err := aws.CreateApiGateway(&gateway)
+				if err != nil {
+					console.Error(err.Error())
+				}
+			} else {
+				if onlyCreate {
+					console.Debugf("Skipping updating api gateway %s because --only-create is set", *gateway.Name)
+					continue
+				}
+
+				err := aws.UpdateApiGateway(&gateway, apiId)
+				if err != nil {
+					console.Error(err.Error())
+				}
 			}
 		}
 	}

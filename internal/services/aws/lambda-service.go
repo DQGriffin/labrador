@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/DQGriffin/labrador/internal/cli/console"
@@ -181,7 +182,13 @@ func DeleteLambda(lambdaName string) {
 		FunctionName: aws.String(lambdaName),
 	})
 	if deleteErr != nil {
-		console.Errorf("failed to delete Lambda %s: %s", lambdaName, deleteErr.Error())
+		if strings.Contains(deleteErr.Error(), "404") {
+			console.Infof("Lambda %s did not exist. No action taken", lambdaName)
+			return
+		} else {
+			console.Errorf("failed to delete Lambda %s: %s", lambdaName, deleteErr.Error())
+			return
+		}
 	}
 
 	console.Infof("Deleted Lambda: %s", lambdaName)
