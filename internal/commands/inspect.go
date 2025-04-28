@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 
@@ -19,9 +20,20 @@ func HandleInspectCommand(config *types.LabradorConfig, format string, stageType
 		printPlainText(config, stageTypesMap, verbose)
 	case "tree":
 		printTree(config, stageTypesMap, verbose)
+	case "json":
+		printJson(config)
 	default:
 		printPlainText(config, stageTypesMap, verbose)
 	}
+}
+
+func printJson(config *types.LabradorConfig) {
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		console.Error("Failed to marshal project config to JSON:", err)
+		return
+	}
+	fmt.Println(string(data))
 }
 
 func printTree(config *types.LabradorConfig, stageTypesMap *map[string]bool, verbose bool) {
