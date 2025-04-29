@@ -33,6 +33,8 @@ func dispatchCommand(project *types.Project, projectPath, stageName, stageType, 
 	switch stageType {
 	case "lambda":
 		return handleAddLambdaStage(project, projectPath, stageName, outputPath)
+	case "s3":
+		return handleAddS3Stage(project, projectPath, stageName, outputPath)
 	default:
 		console.Fatalf("Cannot add stage of unknown type: %s", stageType)
 
@@ -104,6 +106,69 @@ func handleAddLambdaStage(project *types.Project, projectPath, stageName, output
 	}
 
 	console.Infof("Added lambda stage %s to project %s", stageName, project.Name)
+	console.Infof("Stage configuration saved to %s", outputPath)
+
+	return nil
+}
+
+func handleAddS3Stage(project *types.Project, projectPath, stageName, outputPath string) error {
+	bucketConfig := types.S3Config{
+		Defaults: &types.S3Settings{
+			Region:            helpers.AsPtr("us-east-1"),
+			Versioning:        helpers.AsPtr(false),
+			OnDelete:          helpers.AsPtr("delete"),
+			BlockPublicAccess: helpers.AsPtr(true),
+			StaticHosting: &types.StaticHostingSettings{
+				Enabled: false,
+			},
+			Tags: map[string]string{
+				"app": "{{project_name}}",
+			},
+		},
+		Buckets: []types.S3Settings{
+			{
+				Name: helpers.AsPtr("{{env}}-{{project_name}}-assets"),
+			},
+		},
+	}
+
+	data, err := json.MarshalIndent(bucketConfig, "", "  ")
+	if err != nil {
+		console.Debug("Failed to marshal bucket data")
+		return err
+	}
+
+	err = os.WriteFile(outputPath, data, 0644)
+	if err != nil {
+		console.Debug("Failed to write bucket config file")
+		return err
+	}
+
+	stage := types.Stage{
+		Name:         stageName,
+		Type:         "s3",
+		Enabled:      true,
+		OnConflict:   "stop",
+		OnError:      "stop",
+		ConfigFile:   outputPath,
+		Environments: []string{"prod"},
+	}
+
+	project.Stages = append(project.Stages, stage)
+
+	projectData, err := json.MarshalIndent(project, "", "  ")
+	if err != nil {
+		console.Debug("Failed to marshal project data")
+		return err
+	}
+
+	err = os.WriteFile(projectPath, projectData, 0644)
+	if err != nil {
+		console.Debug("Failed to write project config file")
+		return err
+	}
+
+	console.Infof("Added s3 stage %s to project %s", stageName, project.Name)
 	console.Infof("Stage configuration saved to %s", outputPath)
 
 	return nil

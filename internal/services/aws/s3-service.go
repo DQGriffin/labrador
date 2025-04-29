@@ -215,9 +215,9 @@ func blockPublicAccess(ctx context.Context, client s3.Client, bucket *types.S3Se
 func getVersioningSettingString(versioningEnabled bool) string {
 	switch versioningEnabled {
 	case true:
-		return "Enabled"
+		return string(s3Types.BucketVersioningStatusEnabled)
 	default:
-		return "Disabled"
+		return string(s3Types.BucketAccelerateStatusSuspended)
 	}
 }
 
