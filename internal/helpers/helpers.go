@@ -11,6 +11,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func AsPtr[T any](v T) *T {
+	return &v
+}
+
 func IsStageActionable(stage *types.Stage, stageTypesMap *map[string]bool) bool {
 	if len(*stageTypesMap) == 0 {
 		return true

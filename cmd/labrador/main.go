@@ -95,6 +95,7 @@ func main() {
 			cmd.PlanCommand(globalFlags),
 			cmd.DestroyCommand(globalFlags),
 			cmd.InspectCommand(globalFlags),
+			cmd.AddCommand(globalFlags),
 		},
 	}
 

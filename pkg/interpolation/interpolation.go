@@ -37,8 +37,10 @@ func InterpolateStage(stage *types.Stage, vars map[string]string) {
 	stage.ConfigFile = ResolveVariable(stage.ConfigFile, vars)
 	stage.OnConflict = ResolveVariable(stage.OnConflict, vars)
 	stage.OnError = ResolveVariable(stage.OnError, vars)
-	stage.Hooks.Pre = ResolveVariable(stage.Hooks.Pre, vars)
-	stage.Hooks.Post = ResolveVariable(stage.Hooks.Post, vars)
+	if stage.Hooks != nil {
+		stage.Hooks.Pre = ResolveVariable(stage.Hooks.Pre, vars)
+		stage.Hooks.Post = ResolveVariable(stage.Hooks.Post, vars)
+	}
 }
 
 func Interpolate(target any, vars map[string]string) error {
