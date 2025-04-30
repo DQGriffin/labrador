@@ -53,7 +53,7 @@ the samples in /templates.
 Inspect your infrastructure:
 
 ```bash
-labrador inspect --project project.json --env-file .env (optionally --verbose)
+labrador inspect --project project.json --env-file .env (optionally --full)
 ```
 
 Deploy your infrastructure:
