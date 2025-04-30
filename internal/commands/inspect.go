@@ -25,6 +25,12 @@ func HandleInspectCommand(config *types.LabradorConfig, format string, stageType
 	default:
 		printPlainText(config, stageTypesMap, verbose)
 	}
+
+	if len(config.Project.Stages) == 0 {
+		console.Info()
+		console.Info("No stages defined yet.")
+		console.Info("Run 'labrador add stage --help' to see available options")
+	}
 }
 
 func printJson(config *types.LabradorConfig) {
