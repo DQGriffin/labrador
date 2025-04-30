@@ -43,23 +43,25 @@ labrador --version
 Initialize a new Labrador project:
 
 ```bash
-labrador init
+labrador init --name my_project --env dev --output my_project.json
 ```
 
-This will give you a basic project configuration. Feel free to rename the file to anything you like. 
-Future releases will support scaffolding out stage configurations as well, but for now, just take a look at
-the samples in /templates.
+Add a stage to your project:
+
+```bash
+labrador add stage --project my_project.json --type lambda --name auth_lambdas --output ./stages/auth_lambdas.json
+```
 
 Inspect your infrastructure:
 
 ```bash
-labrador inspect --project project.json --env-file .env (optionally --full)
+labrador inspect --project my_project.json --env-file .env --full
 ```
 
 Deploy your infrastructure:
 
 ```bash
-labrador deploy --project project.json --env-file .env
+labrador deploy --project my_project.json --env-file .env
 ```
 
 ---
