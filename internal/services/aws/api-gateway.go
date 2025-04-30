@@ -236,6 +236,10 @@ func DestroyApiGateway(ctx context.Context, client apigatewayv2.Client, gatewayN
 	console.Infof("Deleting API Gateway: %s", gatewayName)
 	apiId, err := GetApiIDByName(ctx, &client, gatewayName)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			console.Infof("API gateway %s did not exist. No action taken", gatewayName)
+			return nil
+		}
 		return err
 	}
 
@@ -244,6 +248,10 @@ func DestroyApiGateway(ctx context.Context, client apigatewayv2.Client, gatewayN
 	})
 
 	if deleteErr != nil {
+		if strings.Contains(deleteErr.Error(), "409") {
+			console.Infof("API gateway %s did not exist. No action taken", gatewayName)
+			return nil
+		}
 		return deleteErr
 	}
 
