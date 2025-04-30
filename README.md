@@ -53,13 +53,13 @@ the samples in /templates.
 Inspect your infrastructure:
 
 ```bash
-labrador --project=project.json --env-file=.env inspect (optionally --verbose)
+labrador inspect --project project.json --env-file .env (optionally --verbose)
 ```
 
 Deploy your infrastructure:
 
 ```bash
-labrador --project=project.json --env-file=.env deploy
+labrador deploy --project project.json --env-file .env
 ```
 
 ---
@@ -67,7 +67,7 @@ labrador --project=project.json --env-file=.env deploy
 ## AWS Credentials
 You have two options for passing AWS credentials to Labrador:
 
-1. Use flags (--aws-access-key-id, --aws-secret-access-key, --aws-region)
+1. Use global flags (--aws-access-key-id, --aws-secret-access-key, --aws-region)
 2. Use an environment file defining AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION
 
 Note: Labrador will never implicitly read .env. You must use --env-file=.env if you want to use variables defined there.
@@ -118,7 +118,7 @@ Example:
 
 ## Status
 
-Labrador is currently in early development (`v0.1.0`).  
+Labrador is currently in early development (`v0.2.x`).  
 While functional, Labrador is still early in development. Minor rough edges may exist as we continue to refine and expand it.
 
 Feedback, issues, and contributions are welcome!

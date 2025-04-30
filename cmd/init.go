@@ -12,7 +12,13 @@ func InitCommand(flags []cli.Flag) *cli.Command {
 	return &cli.Command{
 		Name:  "init",
 		Usage: "Generate a sample Labrador project config",
-		Flags: flags,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "env",
+				Usage:   "Environment to initialize project with (ex. dev, staging, prod)",
+				EnvVars: []string{"ENV"},
+			},
+		},
 		Action: func(c *cli.Context) error {
 			project := types.Project{
 				Name:        "my_project",

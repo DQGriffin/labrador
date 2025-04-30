@@ -18,6 +18,30 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 		Name:  "deploy",
 		Usage: "Deploy Lambda functions defined in your config",
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "env",
+				Usage:   "Deployment environment",
+				EnvVars: []string{"LABRADOR_ENV"},
+			},
+			&cli.StringFlag{
+				Name:    "project",
+				Usage:   "Path to project file",
+				EnvVars: []string{"PROJECT_PATH"},
+			},
+			&cli.BoolFlag{
+				Name:  "dry-run",
+				Usage: "Preview operations before taking action",
+			},
+			&cli.StringFlag{
+				Name:    "env-file",
+				Usage:   "Path to env file",
+				EnvVars: []string{"ENV_FILE"},
+			},
+			&cli.StringFlag{
+				Name:    "stages",
+				Usage:   "Comma-separated list of stage types to deploy (e.g. lambda,s3)",
+				EnvVars: []string{"DEPLOY_STAGES"},
+			},
 			&cli.BoolFlag{
 				Name:  "only-create",
 				Usage: "Only create new resources, skip updating existing ones",
