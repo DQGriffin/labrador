@@ -14,6 +14,9 @@ func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]
 	for _, stage := range config.Project.Stages {
 
 		if helpers.IsStageActionable(&stage, stageTypesMap) {
+			if stage.Hooks != nil {
+				helpers.RunHooks("preDeploy", stage.Hooks.WorkingDir, &stage.Hooks.PreDeploy, stage.Hooks.SuppressStdout, stage.Hooks.SuppressStderr, stage.Hooks.StopOnError)
+			}
 			if stage.Type == "lambda" {
 				deployLambdaStage(&stage, existingLambdas, onlyCreate, onlyUpdate)
 			} else if stage.Type == "s3" {
@@ -22,6 +25,9 @@ func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]
 				deployApiGatewayStage(&stage, existingApiGateways, onlyCreate, onlyUpdate)
 			} else {
 				console.Warn("unknown stage type: ", stage.Type)
+			}
+			if stage.Hooks != nil {
+				helpers.RunHooks("postDeploy", stage.Hooks.WorkingDir, &stage.Hooks.PostDeploy, stage.Hooks.SuppressStdout, stage.Hooks.SuppressStderr, stage.Hooks.StopOnError)
 			}
 		}
 	}

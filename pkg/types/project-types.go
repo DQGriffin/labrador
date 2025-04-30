@@ -28,8 +28,14 @@ type Stage struct {
 }
 
 type Hooks struct {
-	Pre  string `json:"pre,omitempty"`
-	Post string `json:"post,omitempty"`
+	WorkingDir     string   `json:"workingDir,omitempty"`
+	SuppressStdout bool     `json:"suppressStdout,omitempty"`
+	SuppressStderr bool     `json:"suppressStderr,omitempty"`
+	StopOnError    bool     `json:"stopOnError,omitempty"`
+	PreDeploy      []string `json:"preDeploy,omitempty"`
+	PostDeploy     []string `json:"postDeploy,omitempty"`
+	PreDestroy     []string `json:"preDestroy,omitempty"`
+	PostDestroy    []string `json:"postDestroy,omitempty"`
 }
 
 func (e Project) String() string {
