@@ -26,17 +26,7 @@ func InitCommand(flags []cli.Flag) *cli.Command {
 				Variables: map[string]string{
 					"version": "1.0",
 				},
-				Stages: []types.Stage{
-					{
-						Name:         "Lambda Deploy",
-						Type:         "lambda",
-						Enabled:      true,
-						OnConflict:   "stop",
-						OnError:      "stop",
-						ConfigFile:   "functions.json",
-						Environments: []string{"dev", "staging", "prod"},
-					},
-				},
+				Stages: []types.Stage{},
 			}
 
 			// Marshal the project struct to JSON
