@@ -84,6 +84,7 @@ labrador add stage --type api --help
 Each stage type supports customizable configuration, sensible defaults, and full environment interpolation.
 
 **Examples**
+
 See /examples for a sample project deploying several lambda functions, and API gateway with several integrations and routes, and an S3 bucket. You'll need to provide one or more Role ARNs for the lambdas if you choose to deploy it.
 
 ---
