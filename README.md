@@ -40,6 +40,15 @@ labrador --version
 
 ## Quickstart
 
+Create an env file with AWS credentials:
+
+```bash
+# .env
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REGION=
+```
+
 Initialize a new Labrador project:
 
 ```bash
@@ -49,7 +58,7 @@ labrador init --name my_project --env dev --output my_project.json
 Add a stage to your project:
 
 ```bash
-labrador add stage --project my_project.json --type lambda --name auth_lambdas --output auth_lambdas.json
+labrador add stage --project my_project.json --type s3 --name assets --output buckets.json
 ```
 
 Inspect your infrastructure:
@@ -63,6 +72,19 @@ Deploy your infrastructure:
 ```bash
 labrador deploy --project my_project.json --env-file .env
 ```
+
+**More than just S3.**
+
+Labrador can also scaffold and deploy Lambda functions and API Gateways:
+```bash
+labrador add stage --type lambda --help
+labrador add stage --type api --help
+```
+
+Each stage type supports customizable configuration, sensible defaults, and full environment interpolation.
+
+**Examples**
+See /examples for a sample project deploying several lambda functions, and API gateway with several integrations and routes, and an S3 bucket. You'll need to provide one or more Role ARNs for the lambdas if you choose to deploy it.
 
 ---
 
