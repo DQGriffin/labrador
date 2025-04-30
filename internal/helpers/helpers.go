@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"os"
+	"os/exec"
 
 	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/internal/validation"
@@ -10,6 +11,64 @@ import (
 	"github.com/DQGriffin/labrador/pkg/utils"
 	"github.com/joho/godotenv"
 )
+
+func RunHooks(hookType, workingDir string, commands *[]string, suppressStdout, suppressStderr, stopOnError bool) {
+	totalCommands := len(*commands)
+	if totalCommands == 0 {
+		return
+	}
+
+	console.Headingf("[%s hooks]", hookType)
+	successfulCommands := 0
+
+	for _, command := range *commands {
+		execCmd := exec.Command("sh", "-c", command)
+
+		// Set the working dir if specifiec, otherwise use cwd
+		wd := ""
+		if workingDir != "" {
+			console.Debugf("Setting working directory to %s", workingDir)
+			wd = workingDir
+		} else {
+			console.Debug("Working directory not specified. Setting to current working directory")
+			cwd, err := os.Getwd()
+			if err != nil {
+				console.Errorf("hook cannot be executed. working directory could not be set. %s", err.Error())
+				return
+			}
+			wd = cwd
+		}
+
+		if !suppressStdout {
+			execCmd.Stdout = os.Stdout
+		}
+
+		if !suppressStderr {
+			execCmd.Stderr = os.Stderr
+		}
+
+		console.Infof("> %s", command)
+
+		execCmd.Dir = wd
+		err := execCmd.Run()
+		if err != nil {
+			if stopOnError {
+				console.Fatalf("%s hook %q failed: %s", hookType, command, err.Error())
+			} else {
+				console.Warnf("%s hook %q failed: %s", hookType, command, err.Error())
+			}
+		}
+		successfulCommands += 1
+		console.Info()
+	}
+
+	console.Infof("Finished running %s hooks", hookType)
+	console.Infof("%d total, %d successful, %d failed", totalCommands, successfulCommands, totalCommands-successfulCommands)
+}
+
+func AsPtr[T any](v T) *T {
+	return &v
+}
 
 func IsStageActionable(stage *types.Stage, stageTypesMap *map[string]bool) bool {
 	if len(*stageTypesMap) == 0 {

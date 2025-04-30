@@ -1,0 +1,269 @@
+{
+	"defaults": {
+		"onDelete": "delete",
+		"region": "us-east-1",
+		"protocol": "http",
+		"tags": {
+			"app": "{{project_name}}"
+		}
+	},
+	"gateways": [
+		{
+			"name": "{{env}}-{{project_name}}-api",
+			"description": "{{project_name}} API gateway",
+			"stages": [
+				{
+					"name": "$default",
+					"description": "Default stage",
+					"automaticDeployment": true
+				}
+			],
+			"integrations": [
+				{
+					"type": "proxy",
+					"payloadVersion": "2.0",
+					"integrationMethod": "POST",
+					"ref": "create-results-int",
+					"target": {
+						"external": {
+							"dynamic": {
+								"name": "{{env}}-{{project_name}}-create-result-function",
+								"region": "us-east-1",
+								"type": "lambda"
+							}
+						}
+					}
+				},
+				{
+					"type": "proxy",
+					"payloadVersion": "2.0",
+					"integrationMethod": "POST",
+					"ref": "list-results-int",
+					"target": {
+						"external": {
+							"dynamic": {
+								"name": "{{env}}-{{project_name}}-list-results-function",
+								"region": "us-east-1",
+								"type": "lambda"
+							}
+						}
+					}
+				},
+				{
+					"type": "proxy",
+					"payloadVersion": "2.0",
+					"integrationMethod": "POST",
+					"ref": "delete-result-int",
+					"target": {
+						"external": {
+							"dynamic": {
+								"name": "{{env}}-{{project_name}}-delete-result-function",
+								"region": "us-east-1",
+								"type": "lambda"
+							}
+						}
+					}
+				},
+				{
+					"type": "proxy",
+					"payloadVersion": "2.0",
+					"integrationMethod": "POST",
+					"ref": "create-service-int",
+					"target": {
+						"external": {
+							"dynamic": {
+								"name": "{{env}}-{{project_name}}-create-service-function",
+								"region": "us-east-1",
+								"type": "lambda"
+							}
+						}
+					}
+				},
+				{
+					"type": "proxy",
+					"payloadVersion": "2.0",
+					"integrationMethod": "POST",
+					"ref": "list-services-int",
+					"target": {
+						"external": {
+							"dynamic": {
+								"name": "{{env}}-{{project_name}}-list-services-function",
+								"region": "us-east-1",
+								"type": "lambda"
+							}
+						}
+					}
+				},
+				{
+					"type": "proxy",
+					"payloadVersion": "2.0",
+					"integrationMethod": "POST",
+					"ref": "get-service-int",
+					"target": {
+						"external": {
+							"dynamic": {
+								"name": "{{env}}-{{project_name}}-get-service-function",
+								"region": "us-east-1",
+								"type": "lambda"
+							}
+						}
+					}
+				},
+				{
+					"type": "proxy",
+					"payloadVersion": "2.0",
+					"integrationMethod": "POST",
+					"ref": "delete-service-int",
+					"target": {
+						"external": {
+							"dynamic": {
+								"name": "{{env}}-{{project_name}}-delete-service-function",
+								"region": "us-east-1",
+								"type": "lambda"
+							}
+						}
+					}
+				},
+				{
+					"type": "proxy",
+					"payloadVersion": "2.0",
+					"integrationMethod": "POST",
+					"ref": "create-health-check-int",
+					"target": {
+						"external": {
+							"dynamic": {
+								"name": "{{env}}-{{project_name}}-create-health-check-function",
+								"region": "us-east-1",
+								"type": "lambda"
+							}
+						}
+					}
+				},
+				{
+					"type": "proxy",
+					"payloadVersion": "2.0",
+					"integrationMethod": "POST",
+					"ref": "list-health-checks-int",
+					"target": {
+						"external": {
+							"dynamic": {
+								"name": "{{env}}-{{project_name}}-list-health-checks-function",
+								"region": "us-east-1",
+								"type": "lambda"
+							}
+						}
+					}
+				},
+				{
+					"type": "proxy",
+					"payloadVersion": "2.0",
+					"integrationMethod": "POST",
+					"ref": "get-health-check-int",
+					"target": {
+						"external": {
+							"dynamic": {
+								"name": "{{env}}-{{project_name}}-get-health-check-function",
+								"region": "us-east-1",
+								"type": "lambda"
+							}
+						}
+					}
+				},
+				{
+					"type": "proxy",
+					"payloadVersion": "2.0",
+					"integrationMethod": "POST",
+					"ref": "delete-health-check-int",
+					"target": {
+						"external": {
+							"dynamic": {
+								"name": "{{env}}-{{project_name}}-delete-health-check-function",
+								"region": "us-east-1",
+								"type": "lambda"
+							}
+						}
+					}
+				}
+			],
+			"routes": [
+				{
+					"method": "POST",
+					"route": "/service/{serviceId}/health-check/{healthCheckId}/result",
+					"target": {
+						"ref": "create-results-int"
+					}
+				},
+				{
+					"method": "GET",
+					"route": "/service/{serviceId}/health-check/{healthCheckId}/results",
+					"target": {
+						"ref": "list-results-int"
+					}
+				},
+				{
+					"method": "DELETE",
+					"route": "/service/{serviceId}/health-check/{healthCheckId}/result/{resultId}",
+					"target": {
+						"ref": "delete-result-int"
+					}
+				},
+				{
+					"method": "POST",
+					"route": "/service",
+					"target": {
+						"ref": "create-service-int"
+					}
+				},
+				{
+					"method": "GET",
+					"route": "/services",
+					"target": {
+						"ref": "list-services-int"
+					}
+				},
+				{
+					"method": "GET",
+					"route": "/service/{serviceId}",
+					"target": {
+						"ref": "get-service-int"
+					}
+				},
+				{
+					"method": "DELETE",
+					"route": "/service/{serviceId}",
+					"target": {
+						"ref": "delete-service-int"
+					}
+				},
+				{
+					"method": "POST",
+					"route": "/service/{serviceId}/health-check",
+					"target": {
+						"ref": "create-health-check-int"
+					}
+				},
+				{
+					"method": "GET",
+					"route": "/service/{serviceId}/health-checks",
+					"target": {
+						"ref": "list-health-checks-int"
+					}
+				},
+				{
+					"method": "GET",
+					"route": "/service/{serviceId}/health-check/{healthCheckId}",
+					"target": {
+						"ref": "get-health-check-int"
+					}
+				},
+				{
+					"method": "DELETE",
+					"route": "/service/{serviceId}/health-check/{healthCheckId}",
+					"target": {
+						"ref": "delete-health-check-int"
+					}
+				}
+			]
+		}
+	]
+}

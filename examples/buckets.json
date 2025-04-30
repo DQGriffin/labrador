@@ -1,0 +1,19 @@
+{
+	"defaults": {
+		"region": "us-east-1",
+		"versioning": false,
+		"onDelete": "delete",
+		"blockPublicAccess": true,
+		"staticHosting": {
+			"enabled": false
+		},
+		"tags": {
+			"app": "{{project_name}}"
+		}
+	},
+	"buckets": [
+		{
+			"name": "{{env}}-{{project_name}}-assets"
+		}
+	]
+}

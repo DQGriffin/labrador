@@ -6,14 +6,14 @@ type ApiGatewayConfig struct {
 }
 
 type ApiGatewaySettings struct {
-	Name         *string                 `json:"name"`
-	OnDelete     *string                 `json:"onDelete"`
-	Description  *string                 `json:"description"`
-	Region       *string                 `json:"region"`
-	Protocol     *string                 `json:"protocol"`
+	Name         *string                 `json:"name,omitempty"`
+	OnDelete     *string                 `json:"onDelete,omitempty"`
+	Description  *string                 `json:"description,omitempty"`
+	Region       *string                 `json:"region,omitempty"`
+	Protocol     *string                 `json:"protocol,omitempty"`
 	Stages       *[]ApiGatewayStage      `json:"stages,omitempty"`
-	Integrations []ApiGatewayIntegration `json:"integrations"`
-	Routes       []ApiGatewayRoute       `json:"routes"`
+	Integrations []ApiGatewayIntegration `json:"integrations,omitempty"`
+	Routes       []ApiGatewayRoute       `json:"routes,omitempty"`
 	Tags         map[string]string       `json:"tags,omitempty"`
 }
 

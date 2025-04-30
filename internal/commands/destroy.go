@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/DQGriffin/labrador/internal/cli/console"
+	"github.com/DQGriffin/labrador/internal/helpers"
 	"github.com/DQGriffin/labrador/internal/services/aws"
 	internalTypes "github.com/DQGriffin/labrador/internal/types"
 	"github.com/DQGriffin/labrador/pkg/types"
@@ -14,6 +15,10 @@ import (
 func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, force bool, stageTypesMap *map[string]bool, env string) error {
 	for _, stage := range projectConfig.Project.Stages {
 		if isStageMarkedForDeletion(&stage, stageTypesMap, env) {
+			if stage.Hooks != nil {
+				helpers.RunHooks("preDestroy", stage.Hooks.WorkingDir, &stage.Hooks.PreDestroy, stage.Hooks.SuppressStdout, stage.Hooks.SuppressStderr, stage.Hooks.StopOnError)
+			}
+
 			if stage.Type == "lambda" {
 				handleLambdaStage(&stage, isDryRun, force)
 			} else if stage.Type == "s3" {
@@ -21,11 +26,16 @@ func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, for
 			} else if stage.Type == "api" {
 				handleApiGatewayStage(&stage, isDryRun, force)
 			}
+
+			if stage.Hooks != nil {
+				helpers.RunHooks("postDestroy", stage.Hooks.WorkingDir, &stage.Hooks.PostDestroy, stage.Hooks.SuppressStdout, stage.Hooks.SuppressStderr, stage.Hooks.StopOnError)
+			}
 		} else {
-			console.Info("Skipping stage", stage.Name)
+			console.Debug("Skipping stage: ", stage.Name)
 		}
 	}
 
+	console.Info("\nDone")
 	return nil
 }
 
@@ -171,7 +181,10 @@ func destroyResources(resources *[]internalTypes.UniversalResourceDefinition, fo
 		if resource.ResourceType == "lambda" {
 			aws.DeleteLambda(resource.Name)
 		} else if resource.ResourceType == "s3" {
-			aws.DeleteBucket(resource.Name, resource.Region, force)
+			err := aws.DeleteBucket(resource.Name, resource.Region, force)
+			if err != nil {
+				console.Error(err.Error())
+			}
 		} else if resource.ResourceType == "api" {
 
 			ctx := context.TODO()

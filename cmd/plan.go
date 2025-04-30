@@ -12,7 +12,18 @@ func PlanCommand(flags []cli.Flag) *cli.Command {
 	return &cli.Command{
 		Name:  "plan",
 		Usage: "Preview actions labrador will take",
-		Flags: flags,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "project",
+				Usage:   "Path to project file",
+				EnvVars: []string{"PROJECT_PATH"},
+			},
+			&cli.StringFlag{
+				Name:    "env-file",
+				Usage:   "Path to env file",
+				EnvVars: []string{"ENV_FILE"},
+			},
+		},
 		Before: func(c *cli.Context) error {
 			console.SetColorEnabled(!c.Bool("no-color"))
 			console.SetDebugOutputEnabled(c.Bool("debug"))

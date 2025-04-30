@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/DQGriffin/labrador/internal/cli/console"
 	internalTypes "github.com/DQGriffin/labrador/internal/types"
@@ -42,6 +43,53 @@ func CreateApiGateway(gateway *types.ApiGatewaySettings) error {
 	return nil
 }
 
+func UpdateApiGateway(gateway *types.ApiGatewaySettings, apiId string) error {
+	console.Infof("Updating API Gateway %s", *gateway.Name)
+	ctx := context.TODO()
+	cfg, _ := config.LoadDefaultConfig(ctx, config.WithRegion(*gateway.Region))
+	client := apigatewayv2.NewFromConfig(cfg)
+
+	_, err := client.UpdateApi(ctx, &apigatewayv2.UpdateApiInput{
+		ApiId:       aws.String(apiId),
+		Description: aws.String(*gateway.Description),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	refMap := make(map[string]string)
+
+	existingIntegrations, intErr := listIntegrations(&ctx, client, apiId)
+	if intErr != nil {
+		console.Debug("Something went wrong listing integrations")
+		return intErr
+	}
+
+	existingRoutes, routeErr := ListRoutes(&ctx, client, apiId)
+	if routeErr != nil {
+		console.Debug("Something went wrong listing routes")
+		return routeErr
+	}
+
+	deleteRoutes(&gateway.Routes, existingRoutes, ctx, client, apiId)
+	deleteIntegrations(&existingIntegrations, &ctx, client, apiId)
+
+	integrationRefs, err := addIntegrations(&gateway.Integrations, *gateway.Region, &refMap, ctx, *client, apiId)
+
+	if err != nil {
+		return err
+	}
+
+	routesErr := addRoutes(&gateway.Routes, &integrationRefs, ctx, *client, apiId)
+	if routesErr != nil {
+		return routesErr
+	}
+
+	console.Infof("Finished updating API Gateway %s", *gateway.Name)
+	return nil
+}
+
 func setApiGatewaySettings(gateway *types.ApiGatewaySettings, refMap *map[string]string, ctx context.Context, client apigatewayv2.Client, apiId string) error {
 	stageErr := createStages(gateway.Stages, ctx, client, apiId)
 
@@ -64,6 +112,7 @@ func setApiGatewaySettings(gateway *types.ApiGatewaySettings, refMap *map[string
 }
 
 func addIntegrations(integrations *[]types.ApiGatewayIntegration, region string, refMap *map[string]string, ctx context.Context, client apigatewayv2.Client, apiId string) (map[string]string, error) {
+	console.Info("Creating integrations")
 	integrationRefMap := make(map[string]string)
 
 	for _, integration := range *integrations {
@@ -107,15 +156,24 @@ func addIntegrations(integrations *[]types.ApiGatewayIntegration, region string,
 			return integrationRefMap, fmt.Errorf("failed to add permission to lambda: %w", err)
 		}
 
-		AddPermissionToLambda(ctx, cfg, *permission)
+		permErr := AddPermissionToLambda(ctx, cfg, *permission)
+		if permErr != nil {
+			if strings.Contains(permErr.Error(), "409") {
+				console.Debugf("Permission already exists for target %s", targetArn)
+			} else {
+				console.Error("failed to add permission to lambda: ", permErr.Error())
+			}
+		}
 
 		console.Info("Created integration: ", integrationID)
 	}
 
+	console.Info("Finished creating integrations")
 	return integrationRefMap, nil
 }
 
 func addRoutes(routes *[]types.ApiGatewayRoute, refMap *map[string]string, ctx context.Context, client apigatewayv2.Client, apiId string) error {
+	console.Info("Creating routes")
 	for _, route := range *routes {
 		integrationId := (*refMap)[*route.Target.Ref]
 
@@ -123,9 +181,10 @@ func addRoutes(routes *[]types.ApiGatewayRoute, refMap *map[string]string, ctx c
 			return errors.New("failed to add route to API Gateway. Integration ref could not be resolved")
 		}
 
+		routeKey := fmt.Sprintf("%s %s", route.Method, route.Route)
 		_, err := client.CreateRoute(ctx, &apigatewayv2.CreateRouteInput{
 			ApiId:    aws.String(apiId),
-			RouteKey: aws.String(route.Method + " " + route.Route),
+			RouteKey: aws.String(routeKey),
 			Target:   aws.String("integrations/" + integrationId),
 		})
 
@@ -133,9 +192,10 @@ func addRoutes(routes *[]types.ApiGatewayRoute, refMap *map[string]string, ctx c
 			return fmt.Errorf("failed to create route: %w", err)
 		}
 
-		console.Info("Created route GET /users")
+		console.Infof("Created route %s", routeKey)
 	}
 
+	console.Info("Finished creating routes")
 	return nil
 }
 
@@ -176,6 +236,10 @@ func DestroyApiGateway(ctx context.Context, client apigatewayv2.Client, gatewayN
 	console.Infof("Deleting API Gateway: %s", gatewayName)
 	apiId, err := GetApiIDByName(ctx, &client, gatewayName)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			console.Infof("API gateway %s did not exist. No action taken", gatewayName)
+			return nil
+		}
 		return err
 	}
 
@@ -184,9 +248,175 @@ func DestroyApiGateway(ctx context.Context, client apigatewayv2.Client, gatewayN
 	})
 
 	if deleteErr != nil {
+		if strings.Contains(deleteErr.Error(), "409") {
+			console.Infof("API gateway %s did not exist. No action taken", gatewayName)
+			return nil
+		}
 		return deleteErr
 	}
 
 	console.Infof("Deleted API Gateway: %s", gatewayName)
 	return nil
+}
+
+func ListApiGateways(region string) (map[string]string, error) {
+	var existingApiGateways = make(map[string]string)
+
+	ctx := context.TODO()
+	cfg, cfgErr := config.LoadDefaultConfig(ctx, config.WithRegion(region))
+	if cfgErr != nil {
+		console.Error("Failed to load AWS configuration")
+		return nil, cfgErr
+	}
+
+	client := apigatewayv2.NewFromConfig(cfg)
+	input := &apigatewayv2.GetApisInput{}
+
+	resp, err := client.GetApis(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, api := range resp.Items {
+		if api.Name == nil || api.ApiId == nil {
+			console.Debug("An API Gateway could not be added to the existing gateway map because it's missing a name and/or API ID")
+			continue
+		}
+		existingApiGateways[*api.Name] = *api.ApiId
+	}
+
+	// Handle pagination if needed
+	for resp.NextToken != nil {
+		input.NextToken = resp.NextToken
+		resp, err = client.GetApis(ctx, input)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, api := range resp.Items {
+			if api.Name == nil || api.ApiId == nil {
+				console.Debug("An API Gateway could not be added to the existing gateway map because it's missing a name and/or API ID")
+				continue
+			}
+			existingApiGateways[*api.Name] = *api.ApiId
+		}
+	}
+
+	return existingApiGateways, nil
+}
+
+func ListRoutes(ctx *context.Context, client *apigatewayv2.Client, apiID string) (map[string]gatewayTypes.Route, error) {
+	var routes = make(map[string]gatewayTypes.Route)
+
+	input := &apigatewayv2.GetRoutesInput{
+		ApiId: &apiID,
+	}
+
+	resp, err := client.GetRoutes(*ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, route := range resp.Items {
+		routes[*route.RouteKey] = route
+		console.Debugf("Route Target: %s", *route.Target)
+	}
+
+	// Handle pagination if needed
+	for resp.NextToken != nil {
+		input.NextToken = resp.NextToken
+		resp, err = client.GetRoutes(*ctx, input)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, route := range resp.Items {
+			routes[*route.RouteKey] = route
+		}
+	}
+
+	return routes, nil
+}
+
+func listIntegrations(ctx *context.Context, client *apigatewayv2.Client, apiId string) (map[string]gatewayTypes.Integration, error) {
+	var integrations = make(map[string]gatewayTypes.Integration)
+
+	input := &apigatewayv2.GetIntegrationsInput{
+		ApiId: &apiId,
+	}
+
+	resp, err := client.GetIntegrations(*ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, integration := range resp.Items {
+		integrations[*integration.IntegrationId] = integration
+	}
+
+	// Handle pagination if needed
+	for resp.NextToken != nil {
+		input.NextToken = resp.NextToken
+		resp, err = client.GetIntegrations(*ctx, input)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, integration := range resp.Items {
+			integrations[*integration.IntegrationId] = integration
+		}
+	}
+
+	return integrations, nil
+}
+
+func deleteRoutes(routes *[]types.ApiGatewayRoute, existingRoutes map[string]gatewayTypes.Route, ctx context.Context, client *apigatewayv2.Client, apiID string) error {
+	console.Info("Deleting routes...")
+	for _, route := range *routes {
+		routeKey := fmt.Sprintf("%s %s", route.Method, route.Route)
+		console.Infof("Deleting route %s", routeKey)
+		targetRoute := existingRoutes[routeKey]
+
+		if targetRoute.RouteId == nil {
+			console.Warnf("route %s not found, skipping delete", routeKey)
+			continue
+		}
+
+		err := deleteRoute(ctx, client, apiID, *targetRoute.RouteId)
+		if err != nil {
+			return err
+		}
+
+		console.Infof("Finished deleting route %s", routeKey)
+	}
+
+	return nil
+}
+
+func deleteRoute(ctx context.Context, client *apigatewayv2.Client, apiID, routeID string) error {
+	_, err := client.DeleteRoute(ctx, &apigatewayv2.DeleteRouteInput{
+		ApiId:   aws.String(apiID),
+		RouteId: aws.String(routeID),
+	})
+	return err
+}
+
+func deleteIntegrations(existingIntegrations *map[string]gatewayTypes.Integration, ctx *context.Context, client *apigatewayv2.Client, apiID string) {
+	for _, integration := range *existingIntegrations {
+		console.Infof("Deleting integration %s", *integration.IntegrationId)
+		err := deleteIntegration(ctx, client, apiID, *integration.IntegrationId)
+		if err != nil {
+			console.Warnf("could not delete integration %s", *integration.IntegrationId)
+			continue
+		}
+		console.Infof("Deleted integration %s", *integration.IntegrationId)
+	}
+}
+
+func deleteIntegration(ctx *context.Context, client *apigatewayv2.Client, apiID, integrationID string) error {
+	_, err := client.DeleteIntegration(*ctx, &apigatewayv2.DeleteIntegrationInput{
+		ApiId:         aws.String(apiID),
+		IntegrationId: aws.String(integrationID),
+	})
+	return err
 }

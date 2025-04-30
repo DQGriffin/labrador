@@ -15,6 +15,21 @@ func DestroyCommand(flags []cli.Flag) *cli.Command {
 		Name:  "destroy",
 		Usage: "Destroy resources",
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "env",
+				Usage:   "Deployment environment",
+				EnvVars: []string{"LABRADOR_ENV"},
+			},
+			&cli.StringFlag{
+				Name:    "project",
+				Usage:   "Path to project file",
+				EnvVars: []string{"PROJECT_PATH"},
+			},
+			&cli.StringFlag{
+				Name:    "env-file",
+				Usage:   "Path to env file",
+				EnvVars: []string{"ENV_FILE"},
+			},
 			&cli.BoolFlag{
 				Name:    "dry-run",
 				Usage:   "Preview actions labarador will take without making changes to infrastructure",

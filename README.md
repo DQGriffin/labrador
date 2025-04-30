@@ -40,34 +40,59 @@ labrador --version
 
 ## Quickstart
 
+Create an env file with AWS credentials:
+
+```bash
+# .env
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REGION=
+```
+
 Initialize a new Labrador project:
 
 ```bash
-labrador init
+labrador init --name my_project --env dev --output my_project.json
 ```
 
-This will give you a basic project configuration. Feel free to rename the file to anything you like. 
-Future releases will support scaffolding out stage configurations as well, but for now, just take a look at
-the samples in /templates.
+Add a stage to your project:
+
+```bash
+labrador add stage --project my_project.json --type s3 --name assets --output buckets.json
+```
 
 Inspect your infrastructure:
 
 ```bash
-labrador --project=project.json --env-file=.env inspect (optionally --verbose)
+labrador inspect --project my_project.json --env-file .env --full
 ```
 
 Deploy your infrastructure:
 
 ```bash
-labrador --project=project.json --env-file=.env deploy
+labrador deploy --project my_project.json --env-file .env
 ```
+
+**More than just S3.**
+
+Labrador can also scaffold and deploy Lambda functions and API Gateways:
+```bash
+labrador add stage --type lambda --help
+labrador add stage --type api --help
+```
+
+Each stage type supports customizable configuration, sensible defaults, and full environment interpolation.
+
+**Examples**
+
+See /examples for a sample project deploying several lambda functions, and API gateway with several integrations and routes, and an S3 bucket. You'll need to provide one or more Role ARNs for the lambdas if you choose to deploy it.
 
 ---
 
 ## AWS Credentials
 You have two options for passing AWS credentials to Labrador:
 
-1. Use flags (--aws-access-key-id, --aws-secret-access-key, --aws-region)
+1. Use global flags (--aws-access-key-id, --aws-secret-access-key, --aws-region)
 2. Use an environment file defining AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION
 
 Note: Labrador will never implicitly read .env. You must use --env-file=.env if you want to use variables defined there.
@@ -112,13 +137,13 @@ Example:
 |---------|:------:|:------:|:------:|
 | **Lambda** | ✅ | ✅ | ✅ |
 | **S3** | ✅ | ✅ | ✅ |
-| **API Gateway** | ✅ | ❌ | ✅ |
+| **API Gateway** | ✅ | ✅ | ✅ |
 
 ---
 
 ## Status
 
-Labrador is currently in early development (`v0.1.0`).  
+Labrador is currently in early development (`v0.2.x`).  
 While functional, Labrador is still early in development. Minor rough edges may exist as we continue to refine and expand it.
 
 Feedback, issues, and contributions are welcome!
