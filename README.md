@@ -49,7 +49,7 @@ labrador init --name my_project --env dev --output my_project.json
 Add a stage to your project:
 
 ```bash
-labrador add stage --project my_project.json --type lambda --name auth_lambdas --output ./stages/auth_lambdas.json
+labrador add stage --project my_project.json --type lambda --name auth_lambdas --output auth_lambdas.json
 ```
 
 Inspect your infrastructure:
