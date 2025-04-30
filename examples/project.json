@@ -1,0 +1,54 @@
+{
+	"name": "xpulse",
+	"environment": "dev",
+	"stages": [
+		{
+			"name": "lambdas",
+			"type": "lambda",
+			"enabled": true,
+			"onConflict": "stop",
+			"onError": "stop",
+			"config": "./examples/functions.json",
+			"hooks": {
+				"workingDir": "./examples/functions",
+				"suppressStdout": false,
+				"suppressStderr": false,
+				"stopOnError": true,
+				"preDeploy": ["zip sample.zip index.mjs"],
+				"postDeploy": ["rm -f sample.zip"],
+				"preDestroy": [],
+				"postDestroy": []
+			},
+			"environments": [
+				"prod"
+			]
+		},
+		{
+			"name": "api",
+			"type": "api",
+			"enabled": true,
+			"onConflict": "stop",
+			"onError": "stop",
+			"config": "./examples/api.json",
+			"environments": [
+				"prod"
+			]
+		},
+		{
+			"name": "assets",
+			"type": "s3",
+			"enabled": true,
+			"onConflict": "stop",
+			"onError": "stop",
+			"config": "./examples/buckets.json",
+			"environments": [
+				"prod"
+			]
+		}
+	],
+	"variables": {
+		"env": "dev",
+		"version": "1.0",
+		"function_code_dir": "./examples/functions"
+	}
+}
