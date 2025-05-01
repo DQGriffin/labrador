@@ -2,7 +2,7 @@
     "defaults": {
         "protocol": "http",
         "region": "us-east-1",
-        "description": "API Gateway created by labrador",
+        "description": "API Gateway updated by labrador",
         "tags": {
             "app": "labrador",
             "env": "{{env}}"
@@ -53,6 +53,13 @@
             "routes": [
                 {
                     "method": "GET",
+                    "route": "/users",
+                    "target": {
+                        "ref": "auth-func-int"
+                    }
+                },
+                {
+                    "method": "POST",
                     "route": "/users",
                     "target": {
                         "ref": "auth-func-int"

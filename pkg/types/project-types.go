@@ -13,23 +13,29 @@ type Project struct {
 }
 
 type Stage struct {
-	Name         string   `json:"name"`
-	Type         string   `json:"type"`
-	Enabled      bool     `json:"enabled"`
-	OnConflict   string   `json:"onConflict"`
-	OnError      string   `json:"onError"`
-	ConfigFile   string   `json:"config"`
-	DependsOn    []string `json:"dependsOn"`
-	Environments []string `json:"environments"`
-	Hooks        Hooks    `json:"hooks"`
-	Functions    []LambdaData
-	Buckets      []S3Config
-	Gateways     []ApiGatewayConfig
+	Name         string             `json:"name"`
+	Type         string             `json:"type"`
+	Enabled      bool               `json:"enabled,omitempty"`
+	OnConflict   string             `json:"onConflict"`
+	OnError      string             `json:"onError"`
+	ConfigFile   string             `json:"config"`
+	DependsOn    []string           `json:"dependsOn,omitempty"`
+	Environments []string           `json:"environments"`
+	Hooks        *Hooks             `json:"hooks,omitempty"`
+	Functions    []LambdaData       `json:"-"`
+	Buckets      []S3Config         `json:"-"`
+	Gateways     []ApiGatewayConfig `json:"-"`
 }
 
 type Hooks struct {
-	Pre  string `json:"pre"`
-	Post string `json:"post"`
+	WorkingDir     string   `json:"workingDir,omitempty"`
+	SuppressStdout bool     `json:"suppressStdout,omitempty"`
+	SuppressStderr bool     `json:"suppressStderr,omitempty"`
+	StopOnError    bool     `json:"stopOnError,omitempty"`
+	PreDeploy      []string `json:"preDeploy,omitempty"`
+	PostDeploy     []string `json:"postDeploy,omitempty"`
+	PreDestroy     []string `json:"preDestroy,omitempty"`
+	PostDestroy    []string `json:"postDestroy,omitempty"`
 }
 
 func (e Project) String() string {

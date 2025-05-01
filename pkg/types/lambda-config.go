@@ -11,9 +11,9 @@ type LambdaDefaults struct {
 	Handler     *string           `json:"handler,omitempty"`
 	Runtime     *string           `json:"runtime,omitempty"`
 	Code        *string           `json:"code,omitempty"`
-	MemorySize  *uint16           `json:"memory"`
-	Timeout     *uint16           `json:"timeout"`
-	Description *string           `json:"description"`
+	MemorySize  *uint16           `json:"memory,omitempty"`
+	Timeout     *uint16           `json:"timeout,omitempty"`
+	Description *string           `json:"description,omitempty"`
 	Tags        map[string]string `json:"tags,omitempty"`
 	Environment map[string]string `json:"environment,omitempty"`
 }
@@ -25,10 +25,10 @@ type LambdaConfig struct {
 	Handler     *string           `json:"handler,omitempty"`
 	Runtime     *string           `json:"runtime,omitempty"`
 	Code        *string           `json:"code,omitempty"`
-	MemorySize  *uint16           `json:"memory"`
-	Timeout     *uint16           `json:"timeout"`
-	Description *string           `json:"description"`
-	OnDelete    *string           `json:"onDelete"`
+	MemorySize  *uint16           `json:"memory,omitempty"`
+	Timeout     *uint16           `json:"timeout,omitempty"`
+	Description *string           `json:"description,omitempty"`
+	OnDelete    *string           `json:"onDelete,omitempty"`
 	Tags        map[string]string `json:"tags,omitempty"`
 	Environment map[string]string `json:"environment,omitempty"`
 }

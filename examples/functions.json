@@ -1,0 +1,144 @@
+{
+	"defaults": {
+		"region": "us-east-1",
+		"roleArn": "[ROLE_ARN]",
+		"handler": "index.handler",
+		"runtime": "nodejs22.x",
+		"memory": 128,
+		"timeout": 3
+	},
+	"functions": [
+		{
+			"name": "{{env}}-{{project_name}}-create-result-function",
+			"code": "{{function_code_dir}}/sample.zip",
+			"description": "Handles result creation for xPulse",
+			"onDelete": "delete",
+			"tags": {
+				"app": "{{project_name}}"
+			},
+			"environment": {
+				"DB_CONNECTION_STRING": "$DB_CONNECTION_STRING"
+			}
+		},
+		{
+			"name": "{{env}}-{{project_name}}-list-results-function",
+			"code": "{{function_code_dir}}/sample.zip",
+			"description": "Fetches results from DB",
+			"onDelete": "delete",
+			"tags": {
+				"app": "{{project_name}}"
+			},
+			"environment": {
+				"DB_CONNECTION_STRING": "$DB_CONNECTION_STRING"
+			}
+		},
+		{
+			"name": "{{env}}-{{project_name}}-delete-result-function",
+			"code": "{{function_code_dir}}/sample.zip",
+			"description": "Deletes results from DB",
+			"onDelete": "delete",
+			"tags": {
+				"app": "{{project_name}}"
+			},
+			"environment": {
+				"DB_CONNECTION_STRING": "$DB_CONNECTION_STRING"
+			}
+		},
+		{
+			"name": "{{env}}-{{project_name}}-create-service-function",
+			"code": "{{function_code_dir}}/sample.zip",
+			"description": "Handles service creation",
+			"onDelete": "delete",
+			"tags": {
+				"app": "{{project_name}}"
+			},
+			"environment": {
+				"DB_CONNECTION_STRING": "$DB_CONNECTION_STRING"
+			}
+		},
+		{
+			"name": "{{env}}-{{project_name}}-list-services-function",
+			"code": "{{function_code_dir}}/sample.zip",
+			"description": "Fetches services from DB",
+			"onDelete": "delete",
+			"tags": {
+				"app": "{{project_name}}"
+			},
+			"environment": {
+				"DB_CONNECTION_STRING": "$DB_CONNECTION_STRING"
+			}
+		},
+		{
+			"name": "{{env}}-{{project_name}}-get-service-function",
+			"code": "{{function_code_dir}}/sample.zip",
+			"description": "Fetches a specific service from DB",
+			"onDelete": "delete",
+			"tags": {
+				"app": "{{project_name}}"
+			},
+			"environment": {
+				"DB_CONNECTION_STRING": "$DB_CONNECTION_STRING"
+			}
+		},
+		{
+			"name": "{{env}}-{{project_name}}-delete-service-function",
+			"code": "{{function_code_dir}}/sample.zip",
+			"description": "Deletes a service from DB",
+			"onDelete": "delete",
+			"tags": {
+				"app": "{{project_name}}"
+			},
+			"environment": {
+				"DB_CONNECTION_STRING": "$DB_CONNECTION_STRING"
+			}
+		},
+		{
+			"name": "{{env}}-{{project_name}}-create-health-check-function",
+			"code": "{{function_code_dir}}/sample.zip",
+			"description": "Handles health check creation",
+			"onDelete": "delete",
+			"tags": {
+				"app": "{{project_name}}"
+			},
+			"environment": {
+				"DB_CONNECTION_STRING": "$DB_CONNECTION_STRING"
+			}
+		},
+		{
+			"name": "{{env}}-{{project_name}}-list-health-checks-function",
+			"code": "{{function_code_dir}}/sample.zip",
+			"description": "Fetches health checks from DB",
+			"onDelete": "delete",
+			"tags": {
+				"app": "{{project_name}}"
+			},
+			"environment": {
+				"DB_CONNECTION_STRING": "$DB_CONNECTION_STRING"
+			}
+		},
+		{
+			"name": "{{env}}-{{project_name}}-get-health-check-function",
+			"code": "{{function_code_dir}}/sample.zip",
+			"description": "Fetches a health check from DB",
+			"onDelete": "delete",
+			"tags": {
+				"app": "{{project_name}}"
+			},
+			"environment": {
+				"DB_CONNECTION_STRING": "$DB_CONNECTION_STRING"
+			}
+		},
+		{
+			"name": "{{env}}-{{project_name}}-delete-health-check-function",
+			"code": "{{function_code_dir}}/sample.zip",
+			"description": "Deletes a health check from DB",
+			"onDelete": "delete",
+			"tags": {
+				"app": "{{project_name}}"
+			},
+			"environment": {
+				"DB_CONNECTION_STRING": "$DB_CONNECTION_STRING"
+			}
+		}
+	]
+}

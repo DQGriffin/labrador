@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/pkg/types"
@@ -91,6 +92,10 @@ func DeleteBucket(bucketName string, bucketRegion string, force bool) error {
 	})
 
 	if deleteErr != nil {
+		if strings.Contains(deleteErr.Error(), "404") {
+			console.Infof("Bucket %s did not exist. No action taken", bucketName)
+			return nil
+		}
 		return fmt.Errorf("failed to delete bucket %s: %w", bucketName, deleteErr)
 	}
 
@@ -215,9 +220,9 @@ func blockPublicAccess(ctx context.Context, client s3.Client, bucket *types.S3Se
 func getVersioningSettingString(versioningEnabled bool) string {
 	switch versioningEnabled {
 	case true:
-		return "Enabled"
+		return string(s3Types.BucketVersioningStatusEnabled)
 	default:
-		return "Disabled"
+		return string(s3Types.BucketAccelerateStatusSuspended)
 	}
 }
 
