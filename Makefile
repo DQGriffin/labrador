@@ -1,6 +1,6 @@
 APP_NAME=labrador
 BUILD_DIR=bin
-VERSION=v0.1.0
+VERSION=v0.2.1
 
 .PHONY: all build clean package
 

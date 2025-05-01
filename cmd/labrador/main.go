@@ -45,7 +45,7 @@ var globalFlags = []cli.Flag{
 	},
 }
 
-var Version = "0.1.0"
+var Version = "0.2.1"
 
 func main() {
 	err := godotenv.Load(".labrador.env")
