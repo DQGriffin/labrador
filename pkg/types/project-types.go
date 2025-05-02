@@ -42,7 +42,11 @@ type Hooks struct {
 func (e Project) String() string {
 	b, err := json.MarshalIndent(e, "", "  ")
 	if err != nil {
-		return fmt.Sprintf("TelephonyEvent<error: %v>", err)
+		return fmt.Sprintf("Project<error: %v>", err)
 	}
 	return string(b)
+}
+
+func (s Stage) ToHeader() string {
+	return fmt.Sprintf("[Stage - %s - %s]", s.Name, s.Type)
 }
