@@ -1,0 +1,108 @@
+{
+    "users": [
+        {
+            "username": "test-testerson",
+            "awsConsoleAccess": true,
+            "password": {
+                "autogenerate": false,
+                "forceRecreate": false,
+                "custom": "$TEST_TESTERSON_PASSWORD"
+            },
+            "permissions": {
+                "userGroup": "test-group",
+                "copyFromUser": "lightsail",
+                "policyArns": [
+                    "arn:aws:iam::aws:policy/aws-service-role/AccessAnalyzerServiceRolePolicy",
+                    "arn:aws:iam::aws:policy/AIOpsAssistantPolicy"
+                ]
+            }
+        }
+    ],
+    "roles": [
+        {
+            "name": "lambda-basic-role",
+            "description": "Role for lambda",
+            "ref": "lambda-basic-role-ref",
+            "trustPolicy": {
+                "principals": {
+                    "service": [
+                        "lambda.amazonaws.com"
+                    ],
+                    "aws": []
+                },
+                "file": "./trust-policies/lambda-basic-trust-policy.json"
+            },
+            "policyArns": [
+                "arn:aws:iam::aws:policy/aws-service-role/AccessAnalyzerServiceRolePolicy",
+                "arn:aws:iam::aws:policy/AIOpsAssistantPolicy"
+            ],
+            "inlinePolicies": [
+                {
+                    "name": "read-s3",
+                    "actions": [
+                        "s3:GetObject",
+                        "s3:ListBucket"
+                    ],
+                    "resources": [
+                        "arn:aws:s3:::*"
+                    ],
+                    "effect": "allow",
+                    "file": "./iam/inline-policies/lambda-basic-inline-policy.json"
+                }
+            ],
+            "tags": {
+                "app": "{{project_name}}"
+            }
+        }
+    ],
+    "policies": [
+        {
+            "name": "lambda-basic-role",
+            "description": "Role for lambda",
+            "ref": "lambda-basic-role-ref",
+            "permissions": [
+                {
+                    "name": "read-s3",
+                    "actions": [
+                        "s3:GetObject",
+                        "s3:ListBucket"
+                    ],
+                    "resources": [
+                        "arn:aws:s3:::*",
+                        "arn:aws:s3:::*/*"
+                    ],
+                    "effect": "Allow",
+                    "file": "./iam/policies/lambda-basic-policy.json"
+                }
+            ],
+            "tags": {
+                "app": "{{project_name}}"
+            }
+        }
+    ],
+    "userGroups": [
+        {
+            "name": "dev-admins",
+            "ref": "dev-admins-group-ref",
+            "description": "Group for development environment administrators",
+            "policyArns": [
+                "arn:aws:iam::aws:policy/AdministratorAccess"
+            ],
+            "permissions": {
+                "actions": [
+                    "s3:ListBucket",
+                    "dynamodb:ListTables"
+                ],
+                "resources": [
+                    "*"
+                ],
+                "effect": "Allow",
+                "file": "./iam/policies/dev-admins-permissions.json"
+            },
+            "tags": {
+                "env": "dev",
+                "app": "{{project_name}}"
+            }
+        }
+    ]
+}

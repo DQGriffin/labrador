@@ -25,6 +25,7 @@ type Stage struct {
 	Functions    []LambdaData       `json:"-"`
 	Buckets      []S3Config         `json:"-"`
 	Gateways     []ApiGatewayConfig `json:"-"`
+	IamRoles     []IamRoleConfig    `json:"-"`
 }
 
 type Hooks struct {

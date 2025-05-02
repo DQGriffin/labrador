@@ -175,6 +175,15 @@ func LoadProject(filepath string) (types.LabradorConfig, error) {
 		interpolation.Interpolate(&gatewayConfigs[i], project.Variables)
 	}
 
+	iamRoleConfigs, roleErr := utils.ReadIamRoleConfigs(&project.Stages)
+	if roleErr != nil {
+		console.Fatal(roleErr)
+	}
+
+	for i := range iamRoleConfigs {
+		interpolation.Interpolate(&iamRoleConfigs[i], project.Variables)
+	}
+
 	config.Project = project
 	return config, nil
 }

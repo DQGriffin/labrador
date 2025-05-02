@@ -61,8 +61,10 @@ func validateStageType(value string) error {
 		return nil
 	case "api":
 		return nil
+	case "iam-role":
+		return nil
 	default:
-		return fmt.Errorf("type must be one of: lambda, s3, api")
+		return fmt.Errorf("type must be one of: lambda, s3, api, iam-role")
 	}
 }
 

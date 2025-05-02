@@ -1,0 +1,72 @@
+{
+    "defaults": {
+        "trustPolicy": {
+            "principals": {
+                "services": [
+                    "lambda.amazonaws.com"
+                ],
+                "aws": []
+            },
+            "file": "./trust-policies/lambda-basic-trust-policy.json"
+        },
+        "tags": {
+            "app": "{{project_name}}"
+        }
+    },
+    "roles": [
+        {
+            "name": "role-user-supplied-trust-policy",
+            "description": "Basic lambda role for {{project_name}}",
+            "ref": "lambda-basic-role-ref",
+            "policyArns": [
+                "arn:aws:iam::aws:policy/aws-service-role/AccessAnalyzerServiceRolePolicy",
+                "arn:aws:iam::aws:policy/AIOpsAssistantPolicy"
+            ],
+            "inlinePolicies": [
+                {
+                    "name": "read-s3",
+                    "actions": [
+                        "s3:GetObject",
+                        "s3:ListBucket"
+                    ],
+                    "resources": [
+                        "arn:aws:s3:::*"
+                    ],
+                    "effect": "allow",
+                    "file": "./iam/inline-policies/lambda-basic-inline-policy.json"
+                }
+            ]
+        },
+        {
+            "name": "role-auto-generated-trust-policy",
+            "description": "Basic lambda role for {{project_name}}",
+            "ref": "lambda-basic-role-ref",
+            "trustPolicy": {
+                "principals": {
+                    "services": [
+                        "lambda.amazonaws.com"
+                    ],
+                    "aws": []
+                }
+            },
+            "policyArns": [
+                "arn:aws:iam::aws:policy/aws-service-role/AccessAnalyzerServiceRolePolicy",
+                "arn:aws:iam::aws:policy/AIOpsAssistantPolicy"
+            ],
+            "inlinePolicies": [
+                {
+                    "name": "read-s3",
+                    "actions": [
+                        "s3:GetObject",
+                        "s3:ListBucket"
+                    ],
+                    "resources": [
+                        "arn:aws:s3:::*"
+                    ],
+                    "effect": "allow",
+                    "file": "./iam/inline-policies/lambda-basic-inline-policy.json"
+                }
+            ]
+        }
+    ]
+}

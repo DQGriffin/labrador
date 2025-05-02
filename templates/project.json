@@ -8,37 +8,58 @@
     },
     "stages": [
         {
+            "name": "IAM Roles",
+            "type": "iam-role",
+            "enabled": true,
+            "onConflict": "update",
+            "onError": "stop",
+            "config": "{{function_config_dir}}/iam-roles.json",
+            "environments": [
+                "staging",
+                "prod"
+            ]
+        },
+        {
             "name": "Auth Lambdas-{{version}}",
             "type": "lambda",
             "enabled": true,
             "onConflict": "update",
             "onError": "stop",
             "config": "{{function_config_dir}}/functions.json",
-            "environments": ["staging", "prod"],
-            "hooks": {
-                "pre": "npm run package",
-                "post": "npm run clean"
-            }
+            "environments": [
+                "staging",
+                "prod"
+            ]
         },
         {
             "name": "Cache Buckets",
             "type": "s3",
             "enabled": true,
             "config": "{{function_config_dir}}/buckets.json",
-            "dependsOn": ["Auth Lambdas"],
+            "dependsOn": [
+                "Auth Lambdas"
+            ],
             "onConflict": "update",
             "onError": "stop",
-            "environments": ["staging", "prod"]
+            "environments": [
+                "staging",
+                "prod"
+            ]
         },
         {
             "name": "API Gateways",
             "type": "api",
             "enabled": true,
             "config": "{{function_config_dir}}/gateways.json",
-            "dependsOn": ["Auth Lambdas"],
+            "dependsOn": [
+                "Auth Lambdas"
+            ],
             "onConflict": "update",
             "onError": "stop",
-            "environments": ["staging", "prod"]
+            "environments": [
+                "staging",
+                "prod"
+            ]
         }
     ]
 }

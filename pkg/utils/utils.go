@@ -224,6 +224,52 @@ func readApiGatewayConfig(filepath string) (types.ApiGatewayConfig, error) {
 	return config, nil
 }
 
+func ReadIamRoleConfigs(stages *[]types.Stage) ([]types.IamRoleConfig, error) {
+	var configs []types.IamRoleConfig
+
+	for i := range *stages {
+		stage := &(*stages)[i]
+
+		if stage.Type == "iam-role" {
+			config, err := readIamRoleConfig(stage.ConfigFile)
+
+			if err != nil {
+				return configs, err
+			}
+
+			for i := range config.Roles {
+				ApplyDefaults(&config.Roles[i], *config.Defaults)
+			}
+
+			configs = append(configs, config)
+			stage.IamRoles = append(stage.IamRoles, config)
+		}
+	}
+
+	return configs, nil
+}
+
+func readIamRoleConfig(filepath string) (types.IamRoleConfig, error) {
+	var config types.IamRoleConfig
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		console.Error("Failed to read IAM role config")
+		console.Error(err.Error())
+		return config, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&config); err != nil {
+		console.Error("Failed to decode IAM role config")
+		console.Error(err.Error())
+		return config, err
+	}
+
+	return config, nil
+}
+
 func ApplyDefaultsToFunctions(functionData *types.LambdaData) {
 	for i := range functionData.Functions {
 		applyDefaultsToFunction(&functionData.Functions[i], *functionData.Defaults)
