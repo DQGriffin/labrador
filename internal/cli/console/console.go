@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/DQGriffin/labrador/internal/cli/styles"
+	"github.com/DQGriffin/labrador/internal/cli/types"
 )
 
 var debugPrefix = "[DEBUG] "
@@ -13,6 +14,7 @@ var errorPrefix = "[ERROR] "
 
 var isColorEnabled = false
 var isDebugOutputEnabled = false
+var isVerboseOutpputEnabled = false
 
 func SetColorEnabled(value bool) {
 	isColorEnabled = value
@@ -20,6 +22,28 @@ func SetColorEnabled(value bool) {
 
 func SetDebugOutputEnabled(value bool) {
 	isDebugOutputEnabled = value
+}
+
+func SetVerboseOutputEnabled(value bool) {
+	isVerboseOutpputEnabled = value
+}
+
+func Styled(style *types.ConsoleStyle, args ...interface{}) {
+	text := fmt.Sprint(args...)
+	if isColorEnabled {
+		fmt.Println(style.ToLipglossStyle().Render(text))
+	} else {
+		fmt.Println(text)
+	}
+}
+
+func Styledf(style *types.ConsoleStyle, format string, args ...interface{}) {
+	output := fmt.Sprintf(format, args...)
+	if isColorEnabled {
+		fmt.Println(style.ToLipglossStyle().Render(output))
+	} else {
+		fmt.Println(output)
+	}
 }
 
 func Heading(args ...interface{}) {
@@ -57,6 +81,33 @@ func Debug(args ...interface{}) {
 
 func Debugf(format string, args ...interface{}) {
 	if !isDebugOutputEnabled {
+		return
+	}
+	output := fmt.Sprintf(format, args...)
+	formatted := debugPrefix + output
+	if isColorEnabled {
+		fmt.Fprintln(os.Stderr, styles.Primary.Render(formatted))
+	} else {
+		fmt.Fprintln(os.Stderr, formatted)
+	}
+}
+
+func Verbose(args ...interface{}) {
+	if !isVerboseOutpputEnabled {
+		return
+	}
+
+	text := fmt.Sprint(args...)
+	debugText := debugPrefix + text
+	if isColorEnabled {
+		fmt.Fprintln(os.Stderr, styles.Primary.Render(debugText))
+	} else {
+		fmt.Fprintln(os.Stderr, debugText)
+	}
+}
+
+func Verbosef(format string, args ...interface{}) {
+	if !isVerboseOutpputEnabled {
 		return
 	}
 	output := fmt.Sprintf(format, args...)
