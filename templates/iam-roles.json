@@ -15,16 +15,16 @@
     },
     "roles": [
         {
-            "name": "role-user-supplied-trust-policy",
+            "name": "{{project_name}}-user-supplied-assume-role",
             "description": "Basic lambda role for {{project_name}}",
-            "ref": "lambda-basic-role-ref",
+            "ref": "lambda-user-supplied-role-ref",
             "policyArns": [
-                "arn:aws:iam::aws:policy/aws-service-role/AccessAnalyzerServiceRolePolicy",
+                "arn:aws:iam::aws:policy/AWSLambda_FullAccess",
                 "arn:aws:iam::aws:policy/AIOpsAssistantPolicy"
             ],
             "inlinePolicies": [
                 {
-                    "name": "read-s3",
+                    "name": "read-s3-file",
                     "actions": [
                         "s3:GetObject",
                         "s3:ListBucket"
@@ -32,25 +32,26 @@
                     "resources": [
                         "arn:aws:s3:::*"
                     ],
-                    "effect": "allow",
-                    "file": "./iam/inline-policies/lambda-basic-inline-policy.json"
+                    "effect": "Allow",
+                    "file": "/Users/griffin/dev/labrador/templates/policies/basic-s3.json"
                 }
             ]
         },
         {
-            "name": "role-auto-generated-trust-policy",
+            "name": "{{project_name}}-auto-assume-role",
             "description": "Basic lambda role for {{project_name}}",
             "ref": "lambda-basic-role-ref",
             "trustPolicy": {
                 "principals": {
                     "services": [
-                        "lambda.amazonaws.com"
+                        "lambda.amazonaws.com",
+                        "ec2.amazonaws.com"
                     ],
                     "aws": []
                 }
             },
             "policyArns": [
-                "arn:aws:iam::aws:policy/aws-service-role/AccessAnalyzerServiceRolePolicy",
+                "arn:aws:iam::aws:policy/AWSLambda_FullAccess",
                 "arn:aws:iam::aws:policy/AIOpsAssistantPolicy"
             ],
             "inlinePolicies": [
@@ -63,8 +64,7 @@
                     "resources": [
                         "arn:aws:s3:::*"
                     ],
-                    "effect": "allow",
-                    "file": "./iam/inline-policies/lambda-basic-inline-policy.json"
+                    "effect": "Allow"
                 }
             ]
         }

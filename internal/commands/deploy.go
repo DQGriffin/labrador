@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/internal/helpers"
@@ -10,7 +11,7 @@ import (
 	lambdaTypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 )
 
-func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]bool, existingLambdas map[string]lambdaTypes.FunctionConfiguration, existingBuckets map[string]bool, existingApiGateways *map[string]string, onlyCreate bool, onlyUpdate bool) {
+func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]bool, existingLambdas map[string]lambdaTypes.FunctionConfiguration, existingBuckets map[string]bool, existingApiGateways *map[string]string, onlyCreate bool, onlyUpdate bool, propagationWaitTime int) {
 	for _, stage := range config.Project.Stages {
 
 		if helpers.IsStageActionable(&stage, stageTypesMap) {
@@ -23,6 +24,11 @@ func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]
 				deployS3Stage(&stage, existingBuckets, onlyCreate, onlyUpdate)
 			} else if stage.Type == "api" {
 				deployApiGatewayStage(&stage, existingApiGateways, onlyCreate, onlyUpdate)
+			} else if stage.Type == "iam-role" {
+				deployIamRoleStage(&stage, onlyCreate, onlyUpdate)
+
+				console.Info("Waiting to let changes propogate")
+				time.Sleep(time.Duration(propagationWaitTime) * time.Second)
 			} else {
 				console.Warn("unknown stage type: ", stage.Type)
 			}
@@ -34,7 +40,7 @@ func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]
 }
 
 func deployLambdaStage(stage *types.Stage, existingLambdas map[string]lambdaTypes.FunctionConfiguration, onlyCreate bool, onlyUpdate bool) {
-	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
+	console.Heading(stage.ToHeader())
 
 	for _, fnConfig := range stage.Functions {
 		for _, fn := range fnConfig.Functions {
@@ -60,7 +66,7 @@ func deployLambdaStage(stage *types.Stage, existingLambdas map[string]lambdaType
 }
 
 func deployApiGatewayStage(stage *types.Stage, existingApiGateways *map[string]string, onlyCreate bool, onlyUpdate bool) {
-	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
+	console.Heading(stage.ToHeader())
 
 	for _, gatewayConfig := range stage.Gateways {
 		for _, gateway := range gatewayConfig.Gateways {
@@ -94,7 +100,7 @@ func deployApiGatewayStage(stage *types.Stage, existingApiGateways *map[string]s
 }
 
 func deployS3Stage(stage *types.Stage, existingBuckets map[string]bool, onlyCreate bool, onlyUpdate bool) error {
-	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
+	console.Heading(stage.ToHeader())
 
 	for _, bucketConfig := range stage.Buckets {
 		for _, bucket := range bucketConfig.Buckets {
@@ -127,6 +133,24 @@ func deployS3Stage(stage *types.Stage, existingBuckets map[string]bool, onlyCrea
 					fmt.Println(createErr.Error())
 				}
 
+			}
+		}
+	}
+
+	console.Info()
+	return nil
+}
+
+func deployIamRoleStage(stage *types.Stage, onlyCreate, onlyUpdate bool) error {
+	console.Heading(stage.ToHeader())
+
+	for _, config := range stage.IamRoles {
+		for _, role := range config.Roles {
+			if !onlyUpdate {
+				err := aws.CreateIamRole(&role)
+				if err != nil {
+					console.Errorf("failed to create IAM role: %s", err.Error())
+				}
 			}
 		}
 	}

@@ -12,6 +12,7 @@ type IamRoleSettings struct {
 	TrustPolicy    *IamTrustPolicy   `json:"trustPolicy,omitempty"`
 	PolicyArns     []string          `json:"policyArns,omitempty"`
 	InlinePolicies []IamInlinePolicy `json:"inlinePolicies,omitempty"`
+	Tags           map[string]string `json:"tags,omitempty"`
 }
 
 type IamTrustPolicy struct {
