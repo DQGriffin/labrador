@@ -208,6 +208,6 @@ func AddPermissionToLambda(ctx context.Context, cfg aws.Config, permission inter
 		return fmt.Errorf("failed to add permission to %s: %w", permission.FunctionName, err)
 	}
 
-	console.Infof("Added permission to lambda %s", permission.FunctionName)
+	console.Verbose("Added permission to lambda %s", permission.FunctionName)
 	return nil
 }

@@ -112,7 +112,7 @@ func setApiGatewaySettings(gateway *types.ApiGatewaySettings, refMap *map[string
 }
 
 func addIntegrations(integrations *[]types.ApiGatewayIntegration, region string, refMap *map[string]string, ctx context.Context, client apigatewayv2.Client, apiId string) (map[string]string, error) {
-	console.Info("Creating integrations")
+	console.Verbose("Creating integrations")
 	integrationRefMap := make(map[string]string)
 
 	for _, integration := range *integrations {
@@ -159,13 +159,13 @@ func addIntegrations(integrations *[]types.ApiGatewayIntegration, region string,
 		permErr := AddPermissionToLambda(ctx, cfg, *permission)
 		if permErr != nil {
 			if strings.Contains(permErr.Error(), "409") {
-				console.Debugf("Permission already exists for target %s", targetArn)
+				console.Verbosef("Permission already exists for target %s", targetArn)
 			} else {
 				console.Error("failed to add permission to lambda: ", permErr.Error())
 			}
 		}
 
-		console.Info("Created integration: ", integrationID)
+		console.Verbose("Created integration: ", integrationID)
 	}
 
 	console.Info("Finished creating integrations")
@@ -173,7 +173,7 @@ func addIntegrations(integrations *[]types.ApiGatewayIntegration, region string,
 }
 
 func addRoutes(routes *[]types.ApiGatewayRoute, refMap *map[string]string, ctx context.Context, client apigatewayv2.Client, apiId string) error {
-	console.Info("Creating routes")
+	console.Verbose("Creating routes")
 	for _, route := range *routes {
 		integrationId := (*refMap)[*route.Target.Ref]
 
@@ -192,10 +192,10 @@ func addRoutes(routes *[]types.ApiGatewayRoute, refMap *map[string]string, ctx c
 			return fmt.Errorf("failed to create route: %w", err)
 		}
 
-		console.Infof("Created route %s", routeKey)
+		console.Verbosef("Created route %s", routeKey)
 	}
 
-	console.Info("Finished creating routes")
+	console.Verbose("Finished creating routes")
 	return nil
 }
 
@@ -371,7 +371,7 @@ func listIntegrations(ctx *context.Context, client *apigatewayv2.Client, apiId s
 }
 
 func deleteRoutes(routes *[]types.ApiGatewayRoute, existingRoutes map[string]gatewayTypes.Route, ctx context.Context, client *apigatewayv2.Client, apiID string) error {
-	console.Info("Deleting routes...")
+	console.Verbose("Deleting routes...")
 	for _, route := range *routes {
 		routeKey := fmt.Sprintf("%s %s", route.Method, route.Route)
 		console.Infof("Deleting route %s", routeKey)
@@ -387,7 +387,7 @@ func deleteRoutes(routes *[]types.ApiGatewayRoute, existingRoutes map[string]gat
 			return err
 		}
 
-		console.Infof("Finished deleting route %s", routeKey)
+		console.Verbosef("Finished deleting route %s", routeKey)
 	}
 
 	return nil
@@ -403,13 +403,13 @@ func deleteRoute(ctx context.Context, client *apigatewayv2.Client, apiID, routeI
 
 func deleteIntegrations(existingIntegrations *map[string]gatewayTypes.Integration, ctx *context.Context, client *apigatewayv2.Client, apiID string) {
 	for _, integration := range *existingIntegrations {
-		console.Infof("Deleting integration %s", *integration.IntegrationId)
+		console.Verbosef("Deleting integration %s", *integration.IntegrationId)
 		err := deleteIntegration(ctx, client, apiID, *integration.IntegrationId)
 		if err != nil {
 			console.Warnf("could not delete integration %s", *integration.IntegrationId)
 			continue
 		}
-		console.Infof("Deleted integration %s", *integration.IntegrationId)
+		console.Verbosef("Deleted integration %s", *integration.IntegrationId)
 	}
 }
 

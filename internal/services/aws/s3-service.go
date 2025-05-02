@@ -144,10 +144,10 @@ func EmptyBucket(ctx context.Context, bucketName, region string) error {
 			return fmt.Errorf("failed to delete objects: %w", err)
 		}
 
-		console.Infof("Deleted %d objects from %s\n", len(objectsToDelete), bucketName)
+		console.Verbosef("Deleted %d objects from %s\n", len(objectsToDelete), bucketName)
 	}
 
-	console.Infof("Bucket %s is now empty\n", bucketName)
+	console.Verbosef("Bucket %s is now empty\n", bucketName)
 	return nil
 }
 
