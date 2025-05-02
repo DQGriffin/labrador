@@ -7,6 +7,7 @@ import (
 
 	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/internal/commands"
+	"github.com/DQGriffin/labrador/internal/constants"
 	"github.com/DQGriffin/labrador/internal/helpers"
 	"github.com/DQGriffin/labrador/internal/services/aws"
 	"github.com/DQGriffin/labrador/pkg/utils"
@@ -54,10 +55,23 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 				Name:  "stage-types",
 				Usage: "Restrict deployment to specific stage types",
 			},
+			&cli.IntFlag{
+				Name:  "wait-time",
+				Usage: "Wait time when waiting for changes to propagate",
+			},
+			&cli.BoolFlag{
+				Name:  "no-wait",
+				Usage: "Disable waiting for changes to propagate",
+			},
 		},
 		Before: func(c *cli.Context) error {
 			console.SetColorEnabled(!c.Bool("no-color"))
 			console.SetDebugOutputEnabled(c.Bool("debug"))
+			console.SetVerboseOutputEnabled(c.Bool("verbose"))
+
+			if c.Int("wait-time") < 0 {
+				console.Fatal("wait time cannot be negative")
+			}
 
 			if c.Bool("only-create") && c.Bool("only-update") {
 				return fmt.Errorf("you can't use --only-create and --only-update at the same time")
@@ -144,7 +158,15 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 				}
 			}
 
-			commands.HandleDeployCommand(config, &stageTypesMap, existingLambdas, existingBuckets, &existingApiGateways, onlyCreate, onlyUpdate)
+			propagationWaitTime := constants.DEFAULT_WAIT_TIME
+			if c.Uint("wait-time") != 0 {
+				propagationWaitTime = c.Int("wait-time")
+			}
+			if c.Bool("no-wait") {
+				propagationWaitTime = 0
+			}
+
+			commands.HandleDeployCommand(config, &stageTypesMap, existingLambdas, existingBuckets, &existingApiGateways, onlyCreate, onlyUpdate, propagationWaitTime)
 
 			console.Info("Done")
 			return nil
