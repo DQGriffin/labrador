@@ -11,6 +11,7 @@ import (
 	"github.com/DQGriffin/labrador/internal/helpers"
 	"github.com/DQGriffin/labrador/internal/services/aws"
 	"github.com/DQGriffin/labrador/pkg/utils"
+	lambdaTypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/urfave/cli/v2"
 )
 
@@ -121,34 +122,6 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 
 			utils.ReadCliArgs(c)
 
-			existingLambdas, err := aws.ListLambdas()
-
-			if err != nil {
-				console.Fatal("Could not list lambdas in AWS account. Check permissions ", err.Error())
-			}
-
-			ctx, cfg, err := aws.GetConfig("us-east-1")
-
-			if err != nil {
-				return err
-			}
-
-			client := aws.GetClient(cfg)
-			existingBuckets, bucketErr := aws.ListBuckets(ctx, client)
-			if bucketErr != nil {
-				console.Fatal("Could not list buckets in AWS account. Check permissions ", bucketErr.Error())
-			}
-
-			existingApiGateways, gatewayErr := aws.ListApiGateways(os.Getenv("AWS_REGION"))
-			if gatewayErr != nil {
-				console.Fatal(gatewayErr.Error())
-			}
-
-			console.Debugf("Found %d API gateways in the account", len(existingApiGateways))
-
-			onlyCreate := c.Bool("only-create")
-			onlyUpdate := c.Bool("only-update")
-
 			stageTypesMap := make(map[string]bool)
 			if c.String("stage-types") != "" {
 				stageTypes := strings.Split(c.String("stage-types"), ",")
@@ -157,6 +130,51 @@ func DeployCommand(flags []cli.Flag) *cli.Command {
 					stageTypesMap[stageType] = true
 				}
 			}
+
+			var existingLambdas = make(map[string]lambdaTypes.FunctionConfiguration)
+			if len(stageTypesMap) == 0 || stageTypesMap["lambda"] {
+				console.Verbose("Listing lambdas in AWS")
+				accountLambdas, err := aws.ListLambdas()
+				if err != nil {
+					console.Fatal("Could not list lambdas in AWS account. Check permissions ", err.Error())
+				}
+				existingLambdas = accountLambdas
+				console.Verbosef("Found %d lambdas in AWS", len(accountLambdas))
+			}
+
+			var existingBuckets = make(map[string]bool)
+			if len(stageTypesMap) == 0 || stageTypesMap["s3"] {
+				console.Verbose("Listing S3 buckets in AWS")
+				ctx, cfg, err := aws.GetConfig("us-east-1")
+
+				if err != nil {
+					return err
+				}
+
+				client := aws.GetClient(cfg)
+				accountBuckets, bucketErr := aws.ListBuckets(ctx, client)
+				if bucketErr != nil {
+					console.Fatal("Could not list buckets in AWS account. Check permissions ", bucketErr.Error())
+				}
+				existingBuckets = accountBuckets
+				console.Verbosef("Found %d S3 buckets in AWS", len(accountBuckets))
+			}
+
+			var existingApiGateways = make(map[string]string)
+
+			if len(stageTypesMap) == 0 || stageTypesMap["api"] {
+				console.Verbose("Listing API Gateways in AWS")
+				accountApiGateways, gatewayErr := aws.ListApiGateways(os.Getenv("AWS_REGION"))
+				if gatewayErr != nil {
+					console.Fatal(gatewayErr.Error())
+				}
+
+				existingApiGateways = accountApiGateways
+				console.Debugf("Found %d API gateways in AWS", len(accountApiGateways))
+			}
+
+			onlyCreate := c.Bool("only-create")
+			onlyUpdate := c.Bool("only-update")
 
 			propagationWaitTime := constants.DEFAULT_WAIT_TIME
 			if c.Uint("wait-time") != 0 {
