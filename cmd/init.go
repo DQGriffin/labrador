@@ -32,6 +32,13 @@ func InitCommand(flags []cli.Flag) *cli.Command {
 				EnvVars: []string{"OUTPUT"},
 			},
 		},
+		Before: func(c *cli.Context) error {
+			console.SetColorEnabled(!c.Bool("no-color"))
+			console.SetDebugOutputEnabled(c.Bool("debug"))
+			console.SetVerboseOutputEnabled(c.Bool("verbose"))
+
+			return nil
+		},
 		Action: func(c *cli.Context) error {
 
 			projectName := "my_project"

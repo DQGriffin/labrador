@@ -53,6 +53,7 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 
 			console.SetColorEnabled(!c.Bool("no-color"))
 			console.SetDebugOutputEnabled(c.Bool("debug"))
+			console.SetVerboseOutputEnabled(c.Bool("verbose"))
 
 			if c.String("aws-account-id") != "" {
 				console.Debug("Using AWS account ID provided in flag")

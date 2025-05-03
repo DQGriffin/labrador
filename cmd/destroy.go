@@ -49,6 +49,7 @@ func DestroyCommand(flags []cli.Flag) *cli.Command {
 		Before: func(c *cli.Context) error {
 			console.SetColorEnabled(!c.Bool("no-color"))
 			console.SetDebugOutputEnabled(c.Bool("debug"))
+			console.SetVerboseOutputEnabled(c.Bool("verbose"))
 
 			return nil
 		},
