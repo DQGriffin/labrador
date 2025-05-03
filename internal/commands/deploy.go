@@ -27,7 +27,7 @@ func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]
 			} else if stage.Type == "iam-role" {
 				deployIamRoleStage(&stage, onlyCreate, onlyUpdate)
 
-				console.Info("Waiting to let changes propogate")
+				console.Info("Waiting to let changes propagate")
 				time.Sleep(time.Duration(propagationWaitTime) * time.Second)
 			} else {
 				console.Warn("unknown stage type: ", stage.Type)
