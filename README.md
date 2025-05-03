@@ -138,7 +138,7 @@ Example:
 | **Lambda** | ✅ | ✅ | ✅ |
 | **S3** | ✅ | ✅ | ✅ |
 | **API Gateway** | ✅ | ✅ | ✅ |
-| **IAM roles** | ✅ | ✅ | ✅ |
+| **IAM Roles** | ✅ | ✅ | ✅ |
 
 ---
 
