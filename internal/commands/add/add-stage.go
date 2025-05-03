@@ -37,6 +37,8 @@ func dispatchCommand(project *types.Project, projectPath, stageName, stageType, 
 		return handleAddS3Stage(project, projectPath, stageName, outputPath)
 	case "api":
 		return handleAddApiGatewayStage(project, projectPath, stageName, outputPath)
+	case "iam-role":
+		return handleAddIamRoleStage(project, projectPath, stageName, outputPath)
 	default:
 		console.Fatalf("Cannot add stage of unknown type: %s", stageType)
 
@@ -274,6 +276,91 @@ func handleAddApiGatewayStage(project *types.Project, projectPath, stageName, ou
 	console.Infof("Added api stage %s to project %s", stageName, project.Name)
 	console.Infof("Stage configuration saved to %s", outputPath)
 	console.Debug("Finished adding api stage")
+
+	return nil
+}
+
+func handleAddIamRoleStage(project *types.Project, projectPath, stageName, outputPath string) error {
+	console.Debug("Adding iam-role stage")
+
+	iamData := types.IamRoleConfig{
+		Defaults: &types.IamRoleSettings{
+			Tags: map[string]string{
+				"app": "{{project_name}}",
+			},
+		},
+		Roles: []types.IamRoleSettings{
+			{
+				Name:        helpers.AsPtr("{{project_name}}-basic-lambda-role"),
+				Description: helpers.AsPtr("Basic lambda role for {{project_name}}"),
+				Ref:         helpers.AsPtr("basic-lambda-role"),
+				TrustPolicy: &types.IamTrustPolicy{
+					Principals: &types.IamPrincipals{
+						Services: []string{
+							"lambda.amazonaws.com",
+						},
+					},
+				},
+				PolicyArns: []string{
+					"arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+				},
+				InlinePolicies: []types.IamInlinePolicy{
+					{
+						Name:   "read-all-s3-buckets",
+						Effect: helpers.AsPtr("Allow"),
+						Actions: []string{
+							"s3:GetObject",
+							"s3:ListBucket",
+						},
+						Resources: []string{
+							"arn:aws:s3:::*",
+							"arn:aws:s3:::*/*",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	data, err := json.MarshalIndent(iamData, "", "\t")
+	if err != nil {
+		console.Debug("Failed to marshal IAM role data")
+		return err
+	}
+
+	err = os.WriteFile(outputPath, data, 0644)
+	if err != nil {
+		console.Debug("Failed to write IAM role config file")
+		return err
+	}
+
+	stage := types.Stage{
+		Name:         stageName,
+		Type:         "iam-role",
+		Enabled:      true,
+		OnConflict:   "stop",
+		OnError:      "stop",
+		ConfigFile:   outputPath,
+		Environments: []string{"prod"},
+	}
+
+	project.Stages = append(project.Stages, stage)
+
+	projectData, err := json.MarshalIndent(project, "", "\t")
+	if err != nil {
+		console.Debug("Failed to marshal project data")
+		return err
+	}
+
+	err = os.WriteFile(projectPath, projectData, 0644)
+	if err != nil {
+		console.Debug("Failed to write project config file")
+		return err
+	}
+
+	console.Infof("Added iam-role stage %s to project %s", stageName, project.Name)
+	console.Infof("Stage configuration saved to %s", outputPath)
+	console.Debug("Finished adding iam-role stage")
 
 	return nil
 }
