@@ -12,6 +12,20 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func Contains[T comparable](s []T, target T) bool {
+	if s == nil {
+		return false
+	}
+
+	for _, value := range s {
+		if value == target {
+			return true
+		}
+	}
+
+	return false
+}
+
 func RunHooks(hookType, workingDir string, commands *[]string, suppressStdout, suppressStderr, stopOnError bool) {
 	totalCommands := len(*commands)
 	if totalCommands == 0 {

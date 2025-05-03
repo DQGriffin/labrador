@@ -12,6 +12,11 @@ import (
 )
 
 func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]bool, existingLambdas map[string]lambdaTypes.FunctionConfiguration, existingBuckets map[string]bool, existingApiGateways *map[string]string, onlyCreate bool, onlyUpdate bool, propagationWaitTime int) {
+	existingIamRoles, roleErr := aws.ListAllRoleNames()
+	if roleErr != nil {
+		console.Fatalf("failed to list IAM roles in AWS")
+	}
+
 	for _, stage := range config.Project.Stages {
 
 		if helpers.IsStageActionable(&stage, stageTypesMap) {
@@ -25,7 +30,7 @@ func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]
 			} else if stage.Type == "api" {
 				deployApiGatewayStage(&stage, existingApiGateways, onlyCreate, onlyUpdate)
 			} else if stage.Type == "iam-role" {
-				deployIamRoleStage(&stage, onlyCreate, onlyUpdate)
+				deployIamRoleStage(&stage, existingIamRoles, onlyCreate, onlyUpdate)
 
 				console.Info("Waiting to let changes propagate")
 				time.Sleep(time.Duration(propagationWaitTime) * time.Second)
@@ -141,12 +146,25 @@ func deployS3Stage(stage *types.Stage, existingBuckets map[string]bool, onlyCrea
 	return nil
 }
 
-func deployIamRoleStage(stage *types.Stage, onlyCreate, onlyUpdate bool) error {
+func deployIamRoleStage(stage *types.Stage, existingIamRoles []string, onlyCreate, onlyUpdate bool) error {
 	console.Heading(stage.ToHeader())
 
 	for _, config := range stage.IamRoles {
 		for _, role := range config.Roles {
-			if !onlyUpdate {
+			if helpers.Contains(existingIamRoles, *role.Name) {
+				console.Debugf("IAM role %s exists in AWS", *role.Name)
+				if onlyCreate {
+					console.Debugf("Skipping updating IAM role %s because --only-create is set", *role.Name)
+					return nil
+				}
+				aws.UpdateIamRole(&role)
+			} else {
+				console.Debugf("IAM role %s does not exist in AWS", *role.Name)
+				if onlyUpdate {
+					console.Debugf("Skipping creating IAM role %s because --only-update is set", *role.Name)
+					return nil
+				}
+
 				err := aws.CreateIamRole(&role)
 				if err != nil {
 					console.Errorf("failed to create IAM role: %s", err.Error())

@@ -139,6 +139,45 @@ func CreateIamRole(role *types.IamRoleSettings) error {
 	return nil
 }
 
+func UpdateIamRole(role *types.IamRoleSettings) error {
+	console.Styledf(&styles.PrimaryStyle, "\n[%s]", *role.Name)
+	console.Infof("Updating IAM role %s", *role.Name)
+
+	ctx := context.TODO()
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		console.Fatalf("Unable to load AWS config: %v", err)
+	}
+
+	client := iam.NewFromConfig(cfg)
+
+	updateDescription(role, ctx, client)
+
+	for _, policy := range role.PolicyArns {
+		err := attachPolicy(*role.Name, policy, &ctx, client)
+		if err != nil {
+			return err
+		}
+	}
+
+	policyErr := DeleteAllInlinePolicies(ctx, client, *role.Name)
+	if policyErr != nil {
+		console.Warn("Failed to remove existing inline policies")
+	}
+
+	for _, inlinePolicy := range role.InlinePolicies {
+		err := attachInlinePolicy(*role.Name, &inlinePolicy, &ctx, client)
+		if err != nil {
+			return err
+		}
+	}
+
+	updateTrustPolicy(role, ctx, client)
+
+	console.Infof("Finished updating IAM role %s", *role.Name)
+	return nil
+}
+
 func attachPolicy(roleName, policyArn string, ctx *context.Context, client *iam.Client) error {
 	console.Verbosef("Attaching policy ARN to IAM role %s, %s", roleName, policyArn)
 
@@ -333,4 +372,54 @@ func ListAllRoleNames() ([]string, error) {
 	}
 
 	return roleNames, nil
+}
+
+func updateDescription(role *types.IamRoleSettings, ctx context.Context, client *iam.Client) error {
+	console.Verbose("Updating description")
+
+	_, err := client.UpdateRole(ctx, &iam.UpdateRoleInput{
+		RoleName:    aws.String(*role.Name),
+		Description: aws.String(*role.Description),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update IAM role: %w", err)
+	}
+
+	console.Verbose("Finished updating description")
+	return nil
+}
+
+func updateTrustPolicy(role *types.IamRoleSettings, ctx context.Context, client *iam.Client) error {
+	console.Verbose("Updating trust policy")
+	var document string
+
+	if role.TrustPolicy.FilePath != nil && *role.TrustPolicy.FilePath != "" {
+		console.Verbosef("Reading trust policy document from %s", *role.TrustPolicy.FilePath)
+		documentData, docErr := os.ReadFile(*role.TrustPolicy.FilePath)
+		if docErr != nil {
+			console.Debug("Failed to read trust policy document")
+			return docErr
+		}
+
+		document = string(documentData)
+	} else {
+		policyDocument, trustPolicyErr := generateAssumedRole(*role.TrustPolicy)
+		if trustPolicyErr != nil {
+			console.Debug("Failed to generate trust policy document")
+			return trustPolicyErr
+		}
+
+		document = policyDocument
+	}
+
+	_, err := client.UpdateAssumeRolePolicy(ctx, &iam.UpdateAssumeRolePolicyInput{
+		RoleName:       aws.String(*role.Name),
+		PolicyDocument: aws.String(document),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update trust policy for %s: %w", *role.Name, err)
+	}
+
+	console.Verbose("Finished updating trust policy")
+	return nil
 }
