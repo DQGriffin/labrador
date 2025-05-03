@@ -138,12 +138,13 @@ Example:
 | **Lambda** | ✅ | ✅ | ✅ |
 | **S3** | ✅ | ✅ | ✅ |
 | **API Gateway** | ✅ | ✅ | ✅ |
+| **IAM roles** | ✅ | ✅ | ✅ |
 
 ---
 
 ## Status
 
-Labrador is currently in early development (`v0.2.x`).  
+Labrador is currently in early development.  
 While functional, Labrador is still early in development. Minor rough edges may exist as we continue to refine and expand it.
 
 Feedback, issues, and contributions are welcome!
