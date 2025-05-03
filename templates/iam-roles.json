@@ -7,7 +7,7 @@
                 ],
                 "aws": []
             },
-            "file": "./trust-policies/lambda-basic-trust-policy.json"
+            "file": "./templates/policies/lambda-assume.json"
         },
         "tags": {
             "app": "{{project_name}}"
@@ -33,7 +33,7 @@
                         "arn:aws:s3:::*"
                     ],
                     "effect": "Allow",
-                    "file": "/Users/griffin/dev/labrador/templates/policies/basic-s3.json"
+                    "file": "./templates/policies/basic-s3.json"
                 }
             ]
         },
