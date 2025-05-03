@@ -98,11 +98,10 @@ func Verbose(args ...interface{}) {
 	}
 
 	text := fmt.Sprint(args...)
-	debugText := debugPrefix + text
 	if isColorEnabled {
-		fmt.Fprintln(os.Stderr, styles.Primary.Render(debugText))
+		fmt.Fprintln(os.Stderr, styles.Primary.Render(text))
 	} else {
-		fmt.Fprintln(os.Stderr, debugText)
+		fmt.Fprintln(os.Stderr, text)
 	}
 }
 
@@ -111,11 +110,10 @@ func Verbosef(format string, args ...interface{}) {
 		return
 	}
 	output := fmt.Sprintf(format, args...)
-	formatted := debugPrefix + output
 	if isColorEnabled {
-		fmt.Fprintln(os.Stderr, styles.Primary.Render(formatted))
+		fmt.Fprintln(os.Stderr, styles.Primary.Render(output))
 	} else {
-		fmt.Fprintln(os.Stderr, formatted)
+		fmt.Fprintln(os.Stderr, output)
 	}
 }
 
