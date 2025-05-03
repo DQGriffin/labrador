@@ -7,6 +7,7 @@ type IamRoleConfig struct {
 
 type IamRoleSettings struct {
 	Name           *string           `json:"name,omitempty"`
+	OnDelete       *string           `json:"onDelete,omitempty"`
 	Ref            *string           `json:"ref,omitempty"`
 	Description    *string           `json:"description,omitempty"`
 	TrustPolicy    *IamTrustPolicy   `json:"trustPolicy,omitempty"`

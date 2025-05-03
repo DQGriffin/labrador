@@ -25,6 +25,8 @@ func HandleDestroyCommand(projectConfig types.LabradorConfig, isDryRun bool, for
 				handleS3Stage(&stage, isDryRun, force)
 			} else if stage.Type == "api" {
 				handleApiGatewayStage(&stage, isDryRun, force)
+			} else if stage.Type == "iam-role" {
+				handleIamRoleStage(&stage, isDryRun, force)
 			}
 
 			if stage.Hooks != nil {
@@ -69,6 +71,17 @@ func handleApiGatewayStage(stage *types.Stage, isDryRun bool, force bool) {
 		handleDryRun(&deletableGateways, &skippedGateways)
 	} else {
 		destroyResources(&deletableGateways, force)
+	}
+}
+
+func handleIamRoleStage(stage *types.Stage, isDryRun bool, force bool) {
+	console.Headingf("[Stage - %s - %s]", stage.Name, stage.Type)
+	deletableRoles, skippedRoles := getDeletableRoles(&stage.IamRoles, stage.Name)
+
+	if isDryRun {
+		handleDryRun(&deletableRoles, &skippedRoles)
+	} else {
+		destroyResources(&deletableRoles, force)
 	}
 }
 
@@ -176,6 +189,35 @@ func getDeletableApiGateways(config *[]types.ApiGatewayConfig, stageName string)
 	return deletableGateways, skippedGateways
 }
 
+func getDeletableRoles(config *[]types.IamRoleConfig, stageName string) ([]internalTypes.UniversalResourceDefinition, []internalTypes.UniversalResourceDefinition) {
+	var deletableRoles []internalTypes.UniversalResourceDefinition
+	var skippedRoles []internalTypes.UniversalResourceDefinition
+
+	for _, roleConfigs := range *config {
+		for _, role := range roleConfigs.Roles {
+			if (role.OnDelete == nil) || (role.OnDelete != nil && *role.OnDelete != "skip") {
+				deletableRoles = append(deletableRoles, internalTypes.UniversalResourceDefinition{
+					Name:         *role.Name,
+					StageName:    stageName,
+					Arn:          "",
+					ResourceType: "iam-role",
+					Region:       "",
+				})
+			} else {
+				skippedRoles = append(skippedRoles, internalTypes.UniversalResourceDefinition{
+					Name:         *role.Name,
+					StageName:    stageName,
+					Arn:          "",
+					ResourceType: "iam-role",
+					Region:       "",
+				})
+			}
+		}
+	}
+
+	return deletableRoles, skippedRoles
+}
+
 func destroyResources(resources *[]internalTypes.UniversalResourceDefinition, force bool) {
 	for _, resource := range *resources {
 		if resource.ResourceType == "lambda" {
@@ -191,6 +233,11 @@ func destroyResources(resources *[]internalTypes.UniversalResourceDefinition, fo
 			cfg, _ := config.LoadDefaultConfig(ctx, config.WithRegion(resource.Region))
 			client := apigatewayv2.NewFromConfig(cfg)
 			err := aws.DestroyApiGateway(ctx, *client, resource.Name)
+			if err != nil {
+				console.Error(err.Error())
+			}
+		} else if resource.ResourceType == "iam-role" {
+			err := aws.DeleteRole(resource.Name)
 			if err != nil {
 				console.Error(err.Error())
 			}

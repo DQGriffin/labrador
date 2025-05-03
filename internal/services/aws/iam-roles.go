@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 
@@ -166,7 +167,6 @@ func attachInlinePolicy(roleName string, policy *types.IamInlinePolicy, ctx *con
 		}
 
 		document = string(documentData)
-		console.Debug(document)
 	} else {
 		generatedDoc, docErr := generateInlinePolicyDocument(*policy)
 		if docErr != nil {
@@ -186,4 +186,151 @@ func attachInlinePolicy(roleName string, policy *types.IamInlinePolicy, ctx *con
 
 	console.Verbosef("Finished adding inline policy %s to role %s", policy.Name, roleName)
 	return nil
+}
+
+func DeleteRole(roleName string) error {
+	console.Infof("Deleting IAM role %s", roleName)
+	ctx := context.TODO()
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		console.Fatalf("Unable to load AWS config: %v", err)
+	}
+
+	client := iam.NewFromConfig(cfg)
+
+	policyErr := detachAllManagedPolicies(ctx, client, roleName)
+	if policyErr != nil {
+		return policyErr
+	}
+
+	inlinePolicyErr := DeleteAllInlinePolicies(ctx, client, roleName)
+	if inlinePolicyErr != nil {
+		return inlinePolicyErr
+	}
+
+	_, deleteErr := client.DeleteRole(ctx, &iam.DeleteRoleInput{
+		RoleName: &roleName,
+	})
+
+	if deleteErr != nil {
+		if strings.Contains(deleteErr.Error(), "404") {
+			console.Infof("IAM role %s did not exist. No action taken", roleName)
+			return nil
+		}
+
+		return deleteErr
+	}
+
+	console.Infof("Finished deleting IAM role %s", roleName)
+	return nil
+}
+
+func detachAllManagedPolicies(ctx context.Context, client *iam.Client, roleName string) error {
+	console.Verbosef("Detatching managed policies from %s", roleName)
+	var marker *string
+
+	for {
+		output, err := client.ListAttachedRolePolicies(ctx, &iam.ListAttachedRolePoliciesInput{
+			RoleName: aws.String(roleName),
+			Marker:   marker,
+		})
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				console.Verbose("Role not found. No managed policies to detatch")
+				return nil
+			}
+			return fmt.Errorf("listing attached policies: %w", err)
+		}
+
+		for _, policy := range output.AttachedPolicies {
+			_, err := client.DetachRolePolicy(ctx, &iam.DetachRolePolicyInput{
+				RoleName:  aws.String(roleName),
+				PolicyArn: policy.PolicyArn,
+			})
+			if err != nil {
+				return fmt.Errorf("detaching policy %s: %w", aws.ToString(policy.PolicyArn), err)
+			}
+		}
+
+		if !output.IsTruncated {
+			break
+		}
+		marker = output.Marker
+	}
+
+	console.Verbosef("Finished detatching managed policies from %s", roleName)
+	return nil
+}
+
+func DeleteAllInlinePolicies(ctx context.Context, client *iam.Client, roleName string) error {
+	console.Verbosef("Deleting inline policies from IAM role %s", roleName)
+	var marker *string
+
+	for {
+		output, err := client.ListRolePolicies(ctx, &iam.ListRolePoliciesInput{
+			RoleName: aws.String(roleName),
+			Marker:   marker,
+		})
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				console.Verbose("Role not found. No managed policies to detatch")
+				return nil
+			}
+			return fmt.Errorf("listing inline policies: %w", err)
+		}
+
+		for _, policyName := range output.PolicyNames {
+			_, err := client.DeleteRolePolicy(ctx, &iam.DeleteRolePolicyInput{
+				RoleName:   aws.String(roleName),
+				PolicyName: aws.String(policyName),
+			})
+			if err != nil {
+				return fmt.Errorf("deleting inline policy %s: %w", policyName, err)
+			}
+		}
+
+		if !output.IsTruncated {
+			break
+		}
+		marker = output.Marker
+	}
+
+	console.Verbosef("Finished deleting inline policies from IAM role %s", roleName)
+	return nil
+}
+
+func ListAllRoleNames() ([]string, error) {
+	var (
+		roleNames []string
+		marker    *string
+	)
+
+	ctx := context.TODO()
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		console.Fatalf("Unable to load AWS config: %v", err)
+	}
+
+	client := iam.NewFromConfig(cfg)
+
+	for {
+		output, err := client.ListRoles(ctx, &iam.ListRolesInput{
+			Marker: marker,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to list roles: %w", err)
+		}
+
+		for _, role := range output.Roles {
+			roleNames = append(roleNames, aws.ToString(role.RoleName))
+		}
+
+		if !output.IsTruncated {
+			break
+		}
+
+		marker = output.Marker
+	}
+
+	return roleNames, nil
 }
