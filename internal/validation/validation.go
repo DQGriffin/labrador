@@ -3,6 +3,7 @@ package validation
 import (
 	"fmt"
 
+	"github.com/DQGriffin/labrador/internal/constants"
 	"github.com/DQGriffin/labrador/pkg/types"
 )
 
@@ -63,8 +64,10 @@ func validateStageType(value string) error {
 		return nil
 	case "iam-role":
 		return nil
+	case constants.COGNITO_USER_POOL_STAGE:
+		return nil
 	default:
-		return fmt.Errorf("type must be one of: lambda, s3, api, iam-role")
+		return fmt.Errorf("type must be one of: lambda, s3, api, iam-role, cognito-user-pool")
 	}
 }
 

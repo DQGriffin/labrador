@@ -1,6 +1,9 @@
 package types
 
-import "github.com/charmbracelet/lipgloss/tree"
+import (
+	"github.com/DQGriffin/labrador/internal/constants"
+	"github.com/charmbracelet/lipgloss/tree"
+)
 
 func (stage Stage) ToTreeNodes(verbose bool) []*tree.Tree {
 	var nodes []*tree.Tree
@@ -22,6 +25,11 @@ func (stage Stage) ToTreeNodes(verbose bool) []*tree.Tree {
 		}
 	} else if stage.Type == "api" {
 		for _, config := range stage.Gateways {
+			childNodes := config.ToTreeNodes(verbose)
+			nodes = append(nodes, childNodes...)
+		}
+	} else if stage.Type == constants.COGNITO_USER_POOL_STAGE {
+		for _, config := range stage.UserPools {
 			childNodes := config.ToTreeNodes(verbose)
 			nodes = append(nodes, childNodes...)
 		}

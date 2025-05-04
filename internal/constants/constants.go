@@ -63,3 +63,10 @@ var AWSAllRegions = []string{
 	AWS_AP_NORTHEAST_2,
 	AWS_AP_NORTHEAST_3,
 }
+
+const (
+	COGNITO_USER_POOL_STAGE = "cognito-user-pool"
+	LAMBDA_STAGE            = "lambda"
+	S3_STAGE                = "s3"
+	API_GATEWAY_STAGE       = "api"
+)

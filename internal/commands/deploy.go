@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"github.com/DQGriffin/labrador/internal/cli/console"
+	"github.com/DQGriffin/labrador/internal/constants"
 	"github.com/DQGriffin/labrador/internal/helpers"
 	"github.com/DQGriffin/labrador/internal/services/aws"
+	"github.com/DQGriffin/labrador/internal/services/cognito"
 	"github.com/DQGriffin/labrador/pkg/types"
 	lambdaTypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 )
@@ -34,6 +36,8 @@ func HandleDeployCommand(config types.LabradorConfig, stageTypesMap *map[string]
 
 				console.Info("Waiting to let changes propagate")
 				time.Sleep(time.Duration(propagationWaitTime) * time.Second)
+			} else if stage.Type == constants.COGNITO_USER_POOL_STAGE {
+				deployCognitoStage(&stage, onlyCreate, onlyUpdate)
 			} else {
 				console.Warn("unknown stage type: ", stage.Type)
 			}
@@ -174,5 +178,23 @@ func deployIamRoleStage(stage *types.Stage, existingIamRoles []string, onlyCreat
 	}
 
 	console.Info()
+	return nil
+}
+
+func deployCognitoStage(stage *types.Stage, onlyCreate, onlyUpdate bool) error {
+	console.Heading(stage.ToHeader())
+
+	for _, config := range stage.UserPools {
+		for _, pool := range config.Pools {
+			if !onlyUpdate {
+				err := cognito.CreateUserPool(&pool)
+				if err != nil {
+					console.Error(err.Error())
+					return err
+				}
+			}
+		}
+	}
+
 	return nil
 }

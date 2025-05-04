@@ -7,6 +7,8 @@ import (
 	"reflect"
 
 	"github.com/DQGriffin/labrador/internal/cli/console"
+	"github.com/DQGriffin/labrador/internal/constants"
+	"github.com/DQGriffin/labrador/internal/services/cognito"
 	"github.com/DQGriffin/labrador/pkg/types"
 	lambdaTypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/urfave/cli/v2"
@@ -263,6 +265,52 @@ func readIamRoleConfig(filepath string) (types.IamRoleConfig, error) {
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&config); err != nil {
 		console.Error("Failed to decode IAM role config")
+		console.Error(err.Error())
+		return config, err
+	}
+
+	return config, nil
+}
+
+func ReadCognitoConfigs(stages *[]types.Stage) ([]cognito.CognitoConfig, error) {
+	var configs []cognito.CognitoConfig
+
+	for i := range *stages {
+		stage := &(*stages)[i]
+
+		if stage.Type == constants.COGNITO_USER_POOL_STAGE {
+			config, err := readCognitoConfig(stage.ConfigFile)
+
+			if err != nil {
+				return configs, err
+			}
+
+			for i := range config.Pools {
+				ApplyDefaults(&config.Pools[i], *config.Defaults)
+			}
+
+			configs = append(configs, config)
+			stage.UserPools = append(stage.UserPools, config)
+		}
+	}
+
+	return configs, nil
+}
+
+func readCognitoConfig(filepath string) (cognito.CognitoConfig, error) {
+	var config cognito.CognitoConfig
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		console.Error("Failed to read Cognito user pool config")
+		console.Error(err.Error())
+		return config, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&config); err != nil {
+		console.Error("Failed to decode Cognito user pool config")
 		console.Error(err.Error())
 		return config, err
 	}

@@ -60,6 +60,21 @@
                 "staging",
                 "prod"
             ]
+        },
+        {
+            "name": "Cognito",
+            "type": "cognito-user-pool",
+            "enabled": true,
+            "config": "{{function_config_dir}}/cognito.json",
+            "dependsOn": [
+                "Auth Lambdas"
+            ],
+            "onConflict": "update",
+            "onError": "stop",
+            "environments": [
+                "staging",
+                "prod"
+            ]
         }
     ]
 }

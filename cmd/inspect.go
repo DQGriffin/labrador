@@ -1,13 +1,11 @@
 package cmd
 
 import (
-	"os"
 	"strings"
 
 	"github.com/DQGriffin/labrador/internal/cli/console"
 	"github.com/DQGriffin/labrador/internal/commands"
 	"github.com/DQGriffin/labrador/internal/helpers"
-	"github.com/DQGriffin/labrador/internal/services/aws"
 	"github.com/DQGriffin/labrador/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -55,20 +53,20 @@ func InspectCommand(flags []cli.Flag) *cli.Command {
 			console.SetDebugOutputEnabled(c.Bool("debug"))
 			console.SetVerboseOutputEnabled(c.Bool("verbose"))
 
-			if c.String("aws-account-id") != "" {
-				console.Debug("Using AWS account ID provided in flag")
-				os.Setenv("AWS_ACCOUNT_ID", c.String("aws-account_id"))
-				return nil
-			}
+			// if c.String("aws-account-id") != "" {
+			// 	console.Debug("Using AWS account ID provided in flag")
+			// 	os.Setenv("AWS_ACCOUNT_ID", c.String("aws-account_id"))
+			// 	return nil
+			// }
 
-			account, accErr := aws.GetAccountID()
-			if accErr != nil {
-				// Let's not stop execution here
-				console.Error(accErr.Error())
-			}
+			// account, accErr := aws.GetAccountID()
+			// if accErr != nil {
+			// 	// Let's not stop execution here
+			// 	console.Error(accErr.Error())
+			// }
 
-			console.Debug("Account ID ", account)
-			os.Setenv("AWS_ACCOUNT_ID", account)
+			// console.Debug("Account ID ", account)
+			// os.Setenv("AWS_ACCOUNT_ID", account)
 
 			return nil
 		},

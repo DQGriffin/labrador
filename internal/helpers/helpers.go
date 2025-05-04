@@ -198,6 +198,15 @@ func LoadProject(filepath string) (types.LabradorConfig, error) {
 		interpolation.Interpolate(&iamRoleConfigs[i], project.Variables)
 	}
 
+	userPoolConfigs, userPoolErr := utils.ReadCognitoConfigs(&project.Stages)
+	if userPoolErr != nil {
+		console.Fatal(userPoolErr)
+	}
+
+	for i := range userPoolConfigs {
+		interpolation.Interpolate(&userPoolConfigs[i], project.Variables)
+	}
+
 	config.Project = project
 	return config, nil
 }

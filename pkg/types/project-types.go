@@ -3,6 +3,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/DQGriffin/labrador/internal/services/cognito"
 )
 
 type Project struct {
@@ -13,19 +15,20 @@ type Project struct {
 }
 
 type Stage struct {
-	Name         string             `json:"name"`
-	Type         string             `json:"type"`
-	Enabled      bool               `json:"enabled,omitempty"`
-	OnConflict   string             `json:"onConflict"`
-	OnError      string             `json:"onError"`
-	ConfigFile   string             `json:"config"`
-	DependsOn    []string           `json:"dependsOn,omitempty"`
-	Environments []string           `json:"environments"`
-	Hooks        *Hooks             `json:"hooks,omitempty"`
-	Functions    []LambdaData       `json:"-"`
-	Buckets      []S3Config         `json:"-"`
-	Gateways     []ApiGatewayConfig `json:"-"`
-	IamRoles     []IamRoleConfig    `json:"-"`
+	Name         string                  `json:"name"`
+	Type         string                  `json:"type"`
+	Enabled      bool                    `json:"enabled,omitempty"`
+	OnConflict   string                  `json:"onConflict"`
+	OnError      string                  `json:"onError"`
+	ConfigFile   string                  `json:"config"`
+	DependsOn    []string                `json:"dependsOn,omitempty"`
+	Environments []string                `json:"environments"`
+	Hooks        *Hooks                  `json:"hooks,omitempty"`
+	Functions    []LambdaData            `json:"-"`
+	Buckets      []S3Config              `json:"-"`
+	Gateways     []ApiGatewayConfig      `json:"-"`
+	IamRoles     []IamRoleConfig         `json:"-"`
+	UserPools    []cognito.CognitoConfig `json:"-"`
 }
 
 type Hooks struct {

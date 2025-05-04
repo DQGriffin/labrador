@@ -13,6 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.34 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.27.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.52.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.41.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.7.0 // indirect

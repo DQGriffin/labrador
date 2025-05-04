@@ -1,0 +1,56 @@
+{
+    "defaults": {
+        "tags": {
+            "app": "{{project_name}}"
+        }
+    },
+    "pools": [
+        {
+            "applicationName": "my-application",
+            "domainPrefix": "{{project_name}}-{{env}}",
+            "ref": "app-cognito-user-pool",
+            "signInIdentifiers": [
+                "email",
+                "phone_number",
+                "username"
+            ],
+            "signUpAttributes": [
+                "birthdate",
+                "email",
+                "family_name",
+                "given_name",
+                "phone_number"
+            ],
+            "passwordPolicy": {
+                "minLength": 7,
+                "requireSymbols": true,
+                "requireNumbers": true,
+                "requireUppercase": true,
+                "requireLowercase": true
+            },
+            "appClients": [
+                {
+                    "name": "my-application-web",
+                    "type": "traditional",
+                    "returnUrls": [
+                        "http://localhost:3000",
+                        "https://dev-my-app.company.com"
+                    ],
+                    "logoutUrls": [
+                        "https://dev-my-app.company.com/logout"
+                    ]
+                },
+                {
+                    "name": "my-application-mobile",
+                    "type": "mobile",
+                    "returnUrls": [
+                        "https://dev-mobile-my-app.company.com"
+                    ],
+                    "logoutUrls": [
+                        "https://dev-my-app.company.com/logout"
+                    ]
+                }
+            ]
+        }
+    ]
+}
