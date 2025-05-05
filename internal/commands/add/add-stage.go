@@ -6,7 +6,9 @@ import (
 	"os"
 
 	"github.com/DQGriffin/labrador/internal/cli/console"
+	"github.com/DQGriffin/labrador/internal/constants"
 	"github.com/DQGriffin/labrador/internal/helpers"
+	"github.com/DQGriffin/labrador/internal/services/cognito"
 	"github.com/DQGriffin/labrador/pkg/types"
 )
 
@@ -39,6 +41,8 @@ func dispatchCommand(project *types.Project, projectPath, stageName, stageType, 
 		return handleAddApiGatewayStage(project, projectPath, stageName, outputPath)
 	case "iam-role":
 		return handleAddIamRoleStage(project, projectPath, stageName, outputPath)
+	case constants.COGNITO_USER_POOL_STAGE:
+		return handleAddCognitoStage(project, projectPath, stageName, outputPath)
 	default:
 		console.Fatalf("Cannot add stage of unknown type: %s", stageType)
 
@@ -361,6 +365,96 @@ func handleAddIamRoleStage(project *types.Project, projectPath, stageName, outpu
 	console.Infof("Added iam-role stage %s to project %s", stageName, project.Name)
 	console.Infof("Stage configuration saved to %s", outputPath)
 	console.Debug("Finished adding iam-role stage")
+
+	return nil
+}
+
+func handleAddCognitoStage(project *types.Project, projectPath, stageName, outputPath string) error {
+	console.Debug("Adding cognito stage")
+
+	config := cognito.CognitoConfig{
+		Defaults: &cognito.CognitoSettings{
+			Tags: map[string]string{
+				"app": "{{project_name}}",
+			},
+		},
+		Pools: []cognito.CognitoSettings{
+			{
+				ApplicationName: helpers.AsPtr("{{env}}-{{project_name}}-user-pool"),
+				Ref:             helpers.AsPtr("user-pool-ref"),
+				DomainPrefix:    helpers.AsPtr("{{env}}-{{project_name}}"),
+				SignInIdentifiers: &[]string{
+					"username",
+				},
+				SignUpAttributes: &[]string{
+					"birthdate",
+					"email",
+					"family_name",
+					"given_name",
+					"phone_number",
+				},
+				PasswordRequirements: &cognito.CognitoPasswordRequirements{
+					MinLength:        7,
+					RequireSymbols:   true,
+					RequireNumbers:   true,
+					RequireUppercase: true,
+					RequireLowercase: true,
+				},
+				AppClients: &[]cognito.CognitoAppClient{
+					{
+						Name:       "web-client",
+						ClientType: "traditional",
+						ReturnUrls: &[]string{
+							"http://localhost:3000/callback",
+						},
+						LogoutUrls: &[]string{
+							"http://localhost:3000/logout",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	data, err := json.MarshalIndent(config, "", "\t")
+	if err != nil {
+		console.Debug("Failed to marshal cognito data")
+		return err
+	}
+
+	err = os.WriteFile(outputPath, data, 0644)
+	if err != nil {
+		console.Debug("Failed to write cognito config file")
+		return err
+	}
+
+	stage := types.Stage{
+		Name:         stageName,
+		Type:         constants.COGNITO_USER_POOL_STAGE,
+		Enabled:      true,
+		OnConflict:   "stop",
+		OnError:      "stop",
+		ConfigFile:   outputPath,
+		Environments: []string{"prod"},
+	}
+
+	project.Stages = append(project.Stages, stage)
+
+	projectData, err := json.MarshalIndent(project, "", "\t")
+	if err != nil {
+		console.Debug("Failed to marshal project data")
+		return err
+	}
+
+	err = os.WriteFile(projectPath, projectData, 0644)
+	if err != nil {
+		console.Debug("Failed to write project config file")
+		return err
+	}
+
+	console.Infof("Added cognito stage %s to project %s", stageName, project.Name)
+	console.Infof("Stage configuration saved to %s", outputPath)
+	console.Debug("Finished adding cognito stage")
 
 	return nil
 }
